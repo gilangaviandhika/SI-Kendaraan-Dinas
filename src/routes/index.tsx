@@ -52,6 +52,12 @@ function App() {
   const [menu, setMenu] = useState<Menu>("Dashboard");
   const [role, setRole] = useState<Role>("Admin");
   const [pinjam, setPinjam] = useState(pinjam0);
+  const [form, setForm] = useState<null | { nama: string; nopol: string; tujuan: string; tgl: string }>(null);
+  const submit = () => {
+    if (!form || !form.nama || !form.tujuan || !form.tgl) return;
+    setPinjam((p) => [{ id: Date.now(), ...form, status: "Menunggu" }, ...p]);
+    setForm(null);
+  };
   const setStatus = (id: number, status: string) => setPinjam((p) => p.map((x) => (x.id === id ? { ...x, status } : x)));
 
   return (
@@ -113,7 +119,24 @@ function App() {
 
         {menu === "Peminjaman" && (
           <div className="space-y-4">
-            {role === "Pegawai" && <button className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">+ Ajukan Peminjaman</button>}
+            {role === "Pegawai" && !form && <button onClick={() => setForm({ nama: "", nopol: kendaraan[0].nopol, tujuan: "", tgl: "" })} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">+ Ajukan Peminjaman</button>}
+            {role === "Pegawai" && form && (
+              <Card className="space-y-3">
+                <h3 className="font-bold">Form Pengajuan Peminjaman</h3>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <input placeholder="Nama pegawai" value={form.nama} onChange={(e) => setForm({ ...form, nama: e.target.value })} className="rounded-lg border bg-background px-3 py-2 text-sm" />
+                  <select value={form.nopol} onChange={(e) => setForm({ ...form, nopol: e.target.value })} className="rounded-lg border bg-background px-3 py-2 text-sm">
+                    {kendaraan.filter((k) => k.status === "Tersedia").map((k) => <option key={k.nopol} value={k.nopol}>{k.nopol} — {k.merk}</option>)}
+                  </select>
+                  <input placeholder="Tujuan / keperluan" value={form.tujuan} onChange={(e) => setForm({ ...form, tujuan: e.target.value })} className="rounded-lg border bg-background px-3 py-2 text-sm" />
+                  <input type="date" value={form.tgl} onChange={(e) => setForm({ ...form, tgl: e.target.value })} className="rounded-lg border bg-background px-3 py-2 text-sm" />
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={submit} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Kirim Pengajuan</button>
+                  <button onClick={() => setForm(null)} className="rounded-lg border px-4 py-2 text-sm font-semibold">Batal</button>
+                </div>
+              </Card>
+            )}
             {pinjam.map((p) => (
               <Card key={p.id} className="flex flex-wrap items-center justify-between gap-3">
                 <div>
