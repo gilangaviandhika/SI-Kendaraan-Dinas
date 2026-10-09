@@ -119,7 +119,7 @@ function App() {
 
         {menu === "Peminjaman" && (
           <div className="space-y-4">
-            {role === "Pegawai" && !form && <button onClick={() => setForm({ nama: "", nopol: kendaraan[0].nopol, tujuan: "", tgl: "" })} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">+ Ajukan Peminjaman</button>}
+            {role === "Pegawai" && !form && <button onClick={() => setForm({ nama: "", nopol: kendaraan[0]?.nopol ?? "", tujuan: "", tgl: "" })} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">+ Ajukan Peminjaman</button>}
             {role === "Pegawai" && form && (
               <Card className="space-y-3">
                 <h3 className="font-bold">Form Pengajuan Peminjaman</h3>
