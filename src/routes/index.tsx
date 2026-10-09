@@ -90,9 +90,16 @@ function App() {
 
         {menu === "Dashboard" && (
           <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-              {[["Total Kendaraan", "4"], ["Tersedia", "2"], ["Pengajuan Menunggu", String(pinjam.filter((p) => p.status === "Menunggu").length)], ["Biaya Bulan Ini", rp(2770000)]].map(([l, v]) => (
-                <Card key={l}><p className="text-sm text-muted-foreground">{l}</p><p className="mt-1 text-2xl font-extrabold text-primary">{v}</p></Card>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {[
+                { l: "Total Kendaraan Dinas", v: kendaraan.length, c: "text-primary" },
+                { l: "Total Kendaraan Digunakan", v: kendaraan.filter((k) => k.status === "Dipinjam").length, c: "text-warning" },
+                { l: "Total Kendaraan Tersedia", v: kendaraan.filter((k) => k.status === "Tersedia").length, c: "text-success" },
+              ].map((s) => (
+                <Card key={s.l}>
+                  <p className="text-sm text-muted-foreground">{s.l}</p>
+                  <p className={`mt-1 text-3xl font-extrabold ${s.c}`}>{s.v}</p>
+                </Card>
               ))}
             </div>
             <Card>
