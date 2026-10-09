@@ -102,6 +102,22 @@ function App() {
                 </Card>
               ))}
             </div>
+            <div>
+              <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-muted-foreground">Pengajuan Peminjaman</h3>
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                {[
+                  { l: "Total Pengajuan", v: pinjam.length, c: "text-primary" },
+                  { l: "Menunggu", v: pinjam.filter((p) => p.status === "Menunggu").length, c: "text-warning" },
+                  { l: "Disetujui", v: pinjam.filter((p) => p.status === "Disetujui").length, c: "text-success" },
+                  { l: "Ditolak", v: pinjam.filter((p) => p.status === "Ditolak").length, c: "text-destructive" },
+                ].map((s) => (
+                  <Card key={s.l}>
+                    <p className="text-sm text-muted-foreground">{s.l}</p>
+                    <p className={`mt-1 text-3xl font-extrabold ${s.c}`}>{s.v}</p>
+                  </Card>
+                ))}
+              </div>
+            </div>
             <Card>
               <h3 className="mb-3 font-bold">Pengingat pajak / STNK</h3>
               <ul className="space-y-2 text-sm">
