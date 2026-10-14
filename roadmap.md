@@ -1,4 +1,4 @@
 # Roadmap — SI Kendaraan Dinas UPT Bandung
-- [x] Mockup tampilan (data contoh): dashboard, kendaraan, peminjaman, servis & BBM, laporan
-- [ ] Login & peran (admin, atasan, pegawai) — menunggu persetujuan mockup
-- [ ] Simpan data ke database
+- [x] Mockup alur check-out / check-in satpam sesuai flowchart (data contoh)
+- [ ] Login & peran (satpam, admin) — menunggu persetujuan mockup
+- [ ] Simpan data & foto ke database
