@@ -24,7 +24,8 @@ type Trip = {
 };
 
 const drivers = ["Asep Sunandar", "Dedi Kurniawan", "Ujang Supriatna", "Rudi Hartono", "Yayan Ruhiyat"];
-const satpams = ["Pak Hendra (Satpam)", "Pak Iwan (Satpam)"];
+const satpams = ["Pak Hendra (Satpam)", "Pak Iwan (Satpam)"] as const satisfies readonly string[];
+const SATPAM0: string = satpams[0];
 const kendaraan0: Kendaraan[] = [
   { nopol: "D 1234 ABC", merk: "Toyota Innova", odo: 45210, kml: 10, status: "Tersedia" },
   { nopol: "D 5678 XYZ", merk: "Mitsubishi Pajero", odo: 78300, kml: 9, status: "Digunakan" },
@@ -33,9 +34,9 @@ const kendaraan0: Kendaraan[] = [
   { nopol: "D 7788 RST", merk: "Daihatsu Gran Max", odo: 54400, kml: 12, status: "Tersedia" },
 ];
 const trips0: Trip[] = [
-  { id: 1, nopol: "D 5678 XYZ", driver: "Dedi Kurniawan", tujuan: "Rapat Kantor Provinsi", satpamOut: satpams[0], waktuOut: "14 Okt 2026 08:10", odoOut: 78300, fotoOut: [] },
-  { id: 2, nopol: "D 1234 ABC", driver: "Asep Sunandar", tujuan: "Monitoring Lembang", satpamOut: satpams[1], waktuOut: "13 Okt 2026 07:45", odoOut: 45080, fotoOut: [],
-    satpamIn: satpams[0], waktuIn: "13 Okt 2026 15:20", odoIn: 45210, fotoIn: [], kondisi: "Baik, tidak ada kerusakan" },
+  { id: 1, nopol: "D 5678 XYZ", driver: "Dedi Kurniawan", tujuan: "Rapat Kantor Provinsi", satpamOut: SATPAM0, waktuOut: "14 Okt 2026 08:10", odoOut: 78300, fotoOut: [] },
+  { id: 2, nopol: "D 1234 ABC", driver: "Asep Sunandar", tujuan: "Monitoring Lembang", satpamOut: satpams[1] as string, waktuOut: "13 Okt 2026 07:45", odoOut: 45080, fotoOut: [],
+    satpamIn: SATPAM0, waktuIn: "13 Okt 2026 15:20", odoIn: 45210, fotoIn: [], kondisi: "Baik, tidak ada kerusakan" },
 ];
 const now = () => new Date().toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
@@ -78,27 +79,27 @@ function App() {
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(""), 3500); };
 
   // Check-out form
-  const [co, setCo] = useState({ nopol: "", driver: "", tujuan: "", satpam: satpams[0], odo: "", foto: ["", "", ""] });
+  const [co, setCo] = useState({ nopol: "", driver: "", tujuan: "", satpam: SATPAM0, odo: "", foto: ["", "", ""] });
   const kSel = kend.find((k) => k.nopol === co.nopol);
   const coValid = co.nopol && co.driver && co.tujuan && Number(co.odo) >= (kSel?.odo ?? 0) && co.foto.every(Boolean);
   const submitOut = () => {
     if (!coValid) return;
     setTrips((t) => [{ id: Date.now(), nopol: co.nopol, driver: co.driver, tujuan: co.tujuan, satpamOut: co.satpam, waktuOut: now(), odoOut: Number(co.odo), fotoOut: co.foto }, ...t]);
     setKend((ks) => ks.map((k) => (k.nopol === co.nopol ? { ...k, status: "Digunakan" } : k)));
-    setCo({ nopol: "", driver: "", tujuan: "", satpam: satpams[0], odo: "", foto: ["", "", ""] });
+    setCo({ nopol: "", driver: "", tujuan: "", satpam: SATPAM0, odo: "", foto: ["", "", ""] });
     flash("Check-out tercatat. Kendaraan kini berstatus Digunakan.");
     setMenu("Dalam Perjalanan");
   };
 
   // Check-in form
-  const [ci, setCi] = useState({ id: 0, satpam: satpams[0], odo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan" });
+  const [ci, setCi] = useState({ id: 0, satpam: SATPAM0, odo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan" });
   const tSel = trips.find((t) => t.id === ci.id);
   const ciValid = tSel && Number(ci.odo) > tSel.odoOut && ci.foto.every(Boolean);
   const submitIn = () => {
     if (!ciValid || !tSel) return;
     setTrips((t) => t.map((x) => (x.id === ci.id ? { ...x, satpamIn: ci.satpam, waktuIn: now(), odoIn: Number(ci.odo), fotoIn: ci.foto, kondisi: ci.kondisi } : x)));
     setKend((ks) => ks.map((k) => (k.nopol === tSel.nopol ? { ...k, status: "Tersedia", odo: Number(ci.odo) } : k)));
-    setCi({ id: 0, satpam: satpams[0], odo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan" });
+    setCi({ id: 0, satpam: SATPAM0, odo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan" });
     flash("Check-in tercatat. Jarak & BBM dihitung otomatis, kendaraan kembali Tersedia.");
     setMenu("Laporan");
   };
