@@ -48,7 +48,7 @@ const Card = ({ children, className = "" }: { children: React.ReactNode; classNa
 const inp = "w-full rounded-lg border bg-background px-3 py-2 text-sm";
 const btn = "rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-40";
 
-function Foto({ label, value, onChange }: { label: string; value?: string; onChange: (u: string) => void }) {
+function Foto({ label, value, onChange }: { label: string; value?: string | undefined; onChange: (u: string) => void }) {
   return (
     <label className="flex cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-xl border-2 border-dashed bg-muted/40 p-2 text-xs text-muted-foreground h-28">
       {value ? <img src={value} alt={label} className="h-full w-full object-cover rounded-lg" /> : <><span className="text-2xl">📷</span>{label}</>}
