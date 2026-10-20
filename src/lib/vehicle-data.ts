@@ -4,6 +4,7 @@ export type Trip = {
   id: number; nopol: string; driver: string; tujuan: string; satpamOut: string;
   outAt: number; odoOut: number; fotoOut: string[];
   satpamIn?: string; inAt?: number; odoIn?: number; fotoIn?: string[]; kondisi?: string;
+  user?: string; bidang?: string;
 };
 
 export const kendaraan0: Kendaraan[] = [

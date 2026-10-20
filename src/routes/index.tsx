@@ -75,14 +75,14 @@ function App() {
   };
 
   // Check-in form
-  const [ci, setCi] = useState({ id: 0, satpam: SATPAM0, odo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan" });
+  const [ci, setCi] = useState({ id: 0, satpam: SATPAM0, odo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan", user: "", bidang: "" });
   const tSel = trips.find((t) => t.id === ci.id);
-  const ciValid = tSel && Number(ci.odo) > tSel.odoOut && ci.foto.every(Boolean);
+  const ciValid = tSel && Number(ci.odo) > tSel.odoOut && ci.foto.every(Boolean) && !!ci.user.trim() && !!ci.bidang.trim();
   const submitIn = () => {
     if (!ciValid || !tSel) return;
-    setTrips((t) => t.map((x) => (x.id === ci.id ? { ...x, satpamIn: ci.satpam, inAt: Date.now(), odoIn: Number(ci.odo), fotoIn: ci.foto, kondisi: ci.kondisi } : x)));
+    setTrips((t) => t.map((x) => (x.id === ci.id ? { ...x, satpamIn: ci.satpam, inAt: Date.now(), odoIn: Number(ci.odo), fotoIn: ci.foto, kondisi: ci.kondisi, user: ci.user.trim(), bidang: ci.bidang.trim() } : x)));
     setKend((ks) => ks.map((k) => (k.nopol === tSel.nopol ? { ...k, status: "Tersedia", odo: Number(ci.odo) } : k)));
-    setCi({ id: 0, satpam: SATPAM0, odo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan" });
+    setCi({ id: 0, satpam: SATPAM0, odo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan", user: "", bidang: "" });
     flash("Check-in tercatat. Jarak & BBM dihitung otomatis, kendaraan kembali Tersedia.");
     setMenu("Laporan");
   };
@@ -201,6 +201,8 @@ function App() {
                 {aktif.map((t) => <option key={t.id} value={t.id}>{t.nopol} — {t.driver}</option>)}
               </select>
               <select className={inp} value={ci.satpam} onChange={(e) => setCi({ ...ci, satpam: e.target.value })}>{satpams.map((s) => <option key={s}>{s}</option>)}</select>
+              <input className={inp} placeholder="User (nama pegawai yang membawa kendaraan)" value={ci.user} onChange={(e) => setCi({ ...ci, user: e.target.value })} />
+              <input className={inp} placeholder="Bidang tujuan (contoh: Bidang Umum)" value={ci.bidang} onChange={(e) => setCi({ ...ci, bidang: e.target.value })} />
             </div>
             <div>
               <p className="mb-1 text-sm font-bold">🧭 Odometer akhir (KM)</p>
@@ -226,11 +228,13 @@ function App() {
             <h3 className="mb-3 font-bold">Log perjalanan (dihitung otomatis)</h3>
             <table className="w-full text-sm">
               <thead className="text-left text-muted-foreground"><tr>
-                <th className="py-2">Kendaraan</th><th>Driver</th><th>Keluar</th><th>Kembali</th><th className="text-right">Jarak</th><th className="text-right">Est. BBM</th><th>Kondisi</th><th>Foto</th>
+                <th className="py-2">Kendaraan</th><th>Driver</th><th>User</th><th>Bidang</th><th>Keluar</th><th>Kembali</th><th className="text-right">Jarak</th><th className="text-right">Est. BBM</th><th>Kondisi</th><th>Foto</th>
               </tr></thead>
               <tbody>{selesai.map((t) => (
                 <tr key={t.id} className="border-t align-top">
                   <td className="py-3 font-semibold">{t.nopol}</td><td>{t.driver}</td>
+                  <td>{t.user ?? <span className="text-muted-foreground">-</span>}</td>
+                  <td>{t.bidang ?? <span className="text-muted-foreground">-</span>}</td>
                   <td>{fmtWaktu(t.outAt)}<br /><span className="text-xs text-muted-foreground">{t.satpamOut}</span></td>
                   <td>{fmtWaktu(t.inAt)}<br /><span className="text-xs text-muted-foreground">{t.satpamIn}</span></td>
                   <td className="text-right font-semibold">{jarak(t).toLocaleString("id-ID")} KM</td>
