@@ -201,6 +201,8 @@ function App() {
                 {aktif.map((t) => <option key={t.id} value={t.id}>{t.nopol} — {t.driver}</option>)}
               </select>
               <select className={inp} value={ci.satpam} onChange={(e) => setCi({ ...ci, satpam: e.target.value })}>{satpams.map((s) => <option key={s}>{s}</option>)}</select>
+              <input className={inp} placeholder="User (nama pegawai yang membawa kendaraan)" value={ci.user} onChange={(e) => setCi({ ...ci, user: e.target.value })} />
+              <input className={inp} placeholder="Bidang tujuan (contoh: Bidang Umum)" value={ci.bidang} onChange={(e) => setCi({ ...ci, bidang: e.target.value })} />
             </div>
             <div>
               <p className="mb-1 text-sm font-bold">🧭 Odometer akhir (KM)</p>
