@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { kendaraan0, trips0, type Trip } from "@/lib/vehicle-data";
+import { ServiceNav } from "@/components/service-nav";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -15,34 +18,9 @@ export const Route = createFileRoute("/")({
   component: App,
 });
 
-type Status = "Tersedia" | "Digunakan";
-type Kendaraan = { nopol: string; merk: string; odo: number; kml: number; status: Status };
-type Trip = {
-  id: number; nopol: string; driver: string; tujuan: string; satpamOut: string;
-  outAt: number; odoOut: number; fotoOut: string[];
-  satpamIn?: string; inAt?: number; odoIn?: number; fotoIn?: string[]; kondisi?: string;
-};
-
 const drivers = ["Asep Sunandar", "Dedi Kurniawan", "Ujang Supriatna", "Rudi Hartono", "Yayan Ruhiyat"];
 const satpams = ["Pak Hendra (Satpam)", "Pak Iwan (Satpam)"] as const satisfies readonly string[];
 const SATPAM0: string = satpams[0];
-const kendaraan0: Kendaraan[] = [
-  { nopol: "D 1234 ABC", merk: "Toyota Innova", odo: 45210, kml: 10, status: "Tersedia" },
-  { nopol: "D 5678 XYZ", merk: "Mitsubishi Pajero", odo: 78300, kml: 9, status: "Digunakan" },
-  { nopol: "D 9012 KLM", merk: "Toyota Hilux", odo: 61020, kml: 11, status: "Tersedia" },
-  { nopol: "D 3456 PQR", merk: "Toyota Avanza", odo: 32890, kml: 13, status: "Tersedia" },
-  { nopol: "D 7788 RST", merk: "Daihatsu Gran Max", odo: 54400, kml: 12, status: "Tersedia" },
-];
-const dt = (day: number, h: number, m: number) => new Date(2026, 9, day, h, m).getTime();
-const trips0: Trip[] = [
-  { id: 1, nopol: "D 5678 XYZ", driver: "Dedi Kurniawan", tujuan: "Rapat Kantor Provinsi", satpamOut: SATPAM0, outAt: dt(14, 8, 10), odoOut: 78300, fotoOut: [] },
-  { id: 2, nopol: "D 1234 ABC", driver: "Asep Sunandar", tujuan: "Monitoring Lembang", satpamOut: satpams[1] as string, outAt: dt(13, 7, 45), odoOut: 45080, fotoOut: [],
-    satpamIn: SATPAM0, inAt: dt(13, 15, 20), odoIn: 45210, fotoIn: [], kondisi: "Baik, tidak ada kerusakan" },
-  { id: 3, nopol: "D 9012 KLM", driver: "Ujang Supriatna", tujuan: "Survei Lapangan Cikalong", satpamOut: SATPAM0, outAt: dt(12, 8, 5), odoOut: 60800, fotoOut: [],
-    satpamIn: satpams[1] as string, inAt: dt(12, 12, 30), odoIn: 60985, fotoIn: [], kondisi: "Baik, tidak ada kerusakan" },
-  { id: 4, nopol: "D 3456 PQR", driver: "Rudi Hartono", tujuan: "Pengambilan Dokumen ke Bandung", satpamOut: satpams[1] as string, outAt: dt(9, 9, 0), odoOut: 32700, fotoOut: [],
-    satpamIn: SATPAM0, inAt: dt(9, 11, 15), odoIn: 32890, fotoIn: [], kondisi: "Ban serep perlu diperiksa" },
-];
 const fmtWaktu = (ms?: number) => (ms ? new Date(ms).toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "-");
 
 const menus = ["Dashboard", "Check-Out", "Dalam Perjalanan", "Check-In", "Laporan", "Data Master"] as const;
@@ -119,7 +97,7 @@ function App() {
 
   return (
     <div className="min-h-screen font-sans md:flex">
-      <aside className="bg-sidebar-bg text-primary-foreground md:min-h-screen md:w-64 p-5">
+      <aside className="bg-sidebar-bg text-primary-foreground md:min-h-screen md:w-64 md:shrink-0 p-5">
         <div className="mb-6">
           <p className="text-xs uppercase tracking-widest text-accent">UPT Bandung</p>
           <h1 className="text-xl font-extrabold">SI Kendaraan Dinas</h1>
@@ -127,15 +105,16 @@ function App() {
         </div>
         <nav className="flex gap-1 overflow-x-auto md:flex-col">
           {menus.map((m) => (
-            <button key={m} onClick={() => setMenu(m)}
-              className={`whitespace-nowrap rounded-lg px-3 py-2 text-left text-sm font-semibold ${menu === m ? "bg-accent text-accent-foreground" : "hover:bg-primary-foreground/10"}`}>
+            <Button variant="ghost" key={m} onClick={() => setMenu(m)}
+              className={`justify-start whitespace-nowrap rounded-lg px-3 py-2 text-left text-sm font-semibold ${menu === m ? "bg-accent text-accent-foreground" : "hover:bg-primary-foreground/10 hover:text-primary-foreground"}`}>
               {m}{m === "Dalam Perjalanan" && aktif.length > 0 && <span className="ml-2 rounded-full bg-warning px-2 text-xs text-foreground">{aktif.length}</span>}
-            </button>
+            </Button>
           ))}
         </nav>
+        <ServiceNav />
       </aside>
 
-      <main className="flex-1 p-5 md:p-8">
+      <main className="min-w-0 flex-1 p-5 md:p-8">
         <h2 className="mb-6 text-2xl font-extrabold text-foreground">{menu}</h2>
         {msg && <div className="mb-4 rounded-lg bg-success/15 px-4 py-3 text-sm font-semibold text-success">{msg}</div>}
 
