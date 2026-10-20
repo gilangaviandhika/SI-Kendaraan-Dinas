@@ -75,14 +75,14 @@ function App() {
   };
 
   // Check-in form
-  const [ci, setCi] = useState({ id: 0, satpam: SATPAM0, odo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan" });
+  const [ci, setCi] = useState({ id: 0, satpam: SATPAM0, odo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan", user: "", bidang: "" });
   const tSel = trips.find((t) => t.id === ci.id);
-  const ciValid = tSel && Number(ci.odo) > tSel.odoOut && ci.foto.every(Boolean);
+  const ciValid = tSel && Number(ci.odo) > tSel.odoOut && ci.foto.every(Boolean) && !!ci.user.trim() && !!ci.bidang.trim();
   const submitIn = () => {
     if (!ciValid || !tSel) return;
-    setTrips((t) => t.map((x) => (x.id === ci.id ? { ...x, satpamIn: ci.satpam, inAt: Date.now(), odoIn: Number(ci.odo), fotoIn: ci.foto, kondisi: ci.kondisi } : x)));
+    setTrips((t) => t.map((x) => (x.id === ci.id ? { ...x, satpamIn: ci.satpam, inAt: Date.now(), odoIn: Number(ci.odo), fotoIn: ci.foto, kondisi: ci.kondisi, user: ci.user.trim(), bidang: ci.bidang.trim() } : x)));
     setKend((ks) => ks.map((k) => (k.nopol === tSel.nopol ? { ...k, status: "Tersedia", odo: Number(ci.odo) } : k)));
-    setCi({ id: 0, satpam: SATPAM0, odo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan" });
+    setCi({ id: 0, satpam: SATPAM0, odo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan", user: "", bidang: "" });
     flash("Check-in tercatat. Jarak & BBM dihitung otomatis, kendaraan kembali Tersedia.");
     setMenu("Laporan");
   };
