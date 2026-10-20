@@ -228,11 +228,13 @@ function App() {
             <h3 className="mb-3 font-bold">Log perjalanan (dihitung otomatis)</h3>
             <table className="w-full text-sm">
               <thead className="text-left text-muted-foreground"><tr>
-                <th className="py-2">Kendaraan</th><th>Driver</th><th>Keluar</th><th>Kembali</th><th className="text-right">Jarak</th><th className="text-right">Est. BBM</th><th>Kondisi</th><th>Foto</th>
+                <th className="py-2">Kendaraan</th><th>Driver</th><th>User</th><th>Bidang</th><th>Keluar</th><th>Kembali</th><th className="text-right">Jarak</th><th className="text-right">Est. BBM</th><th>Kondisi</th><th>Foto</th>
               </tr></thead>
               <tbody>{selesai.map((t) => (
                 <tr key={t.id} className="border-t align-top">
                   <td className="py-3 font-semibold">{t.nopol}</td><td>{t.driver}</td>
+                  <td>{t.user ?? <span className="text-muted-foreground">-</span>}</td>
+                  <td>{t.bidang ?? <span className="text-muted-foreground">-</span>}</td>
                   <td>{fmtWaktu(t.outAt)}<br /><span className="text-xs text-muted-foreground">{t.satpamOut}</span></td>
                   <td>{fmtWaktu(t.inAt)}<br /><span className="text-xs text-muted-foreground">{t.satpamIn}</span></td>
                   <td className="text-right font-semibold">{jarak(t).toLocaleString("id-ID")} KM</td>
