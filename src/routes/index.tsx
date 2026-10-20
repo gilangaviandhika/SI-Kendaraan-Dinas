@@ -141,18 +141,6 @@ function App() {
                 <Card key={s.l}><p className="text-sm text-muted-foreground">{s.l}</p><p className={`mt-1 text-3xl font-extrabold ${s.c}`}>{s.v}</p></Card>
               ))}
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <Card>
-                <h3 className="mb-2 font-bold">Kendaraan keluar (check-out)</h3>
-                <p className="mb-4 text-sm text-muted-foreground">Satpam mencatat odometer & foto kendaraan sebelum berangkat.</p>
-                <button className={btn} onClick={() => setMenu("Check-Out")}>Mulai Check-Out</button>
-              </Card>
-              <Card>
-                <h3 className="mb-2 font-bold">Kendaraan kembali (check-in)</h3>
-                <p className="mb-4 text-sm text-muted-foreground">Satpam mencatat odometer akhir & foto kondisi saat kembali.</p>
-                <button className={btn} onClick={() => setMenu("Check-In")}>Mulai Check-In</button>
-              </Card>
-            </div>
           </div>
         )}
 
