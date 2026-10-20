@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EOvertimeRouteImport } from './routes/e-overtime'
+import { Route as ESppdRouteImport } from './routes/e-sppd'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EOvertimeRoute = EOvertimeRouteImport.update({
+  id: '/e-overtime',
+  path: '/e-overtime',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ESppdRoute = ESppdRouteImport.update({
+  id: '/e-sppd',
+  path: '/e-sppd',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/e-overtime': typeof EOvertimeRoute
+  '/e-sppd': typeof ESppdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/e-overtime': typeof EOvertimeRoute
+  '/e-sppd': typeof ESppdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/e-overtime': typeof EOvertimeRoute
+  '/e-sppd': typeof ESppdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/e-overtime' | '/e-sppd'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/e-overtime' | '/e-sppd'
+  id: '__root__' | '/' | '/e-overtime' | '/e-sppd'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  EOvertimeRoute: typeof EOvertimeRoute
+  ESppdRoute: typeof ESppdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/e-overtime': {
+      id: '/e-overtime'
+      path: '/e-overtime'
+      fullPath: '/e-overtime'
+      preLoaderRoute: typeof EOvertimeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/e-sppd': {
+      id: '/e-sppd'
+      path: '/e-sppd'
+      fullPath: '/e-sppd'
+      preLoaderRoute: typeof ESppdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  EOvertimeRoute: EOvertimeRoute,
+  ESppdRoute: ESppdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
