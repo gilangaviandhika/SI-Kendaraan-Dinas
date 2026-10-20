@@ -19,8 +19,8 @@ type Status = "Tersedia" | "Digunakan";
 type Kendaraan = { nopol: string; merk: string; odo: number; kml: number; status: Status };
 type Trip = {
   id: number; nopol: string; driver: string; tujuan: string; satpamOut: string;
-  waktuOut: string; odoOut: number; fotoOut: string[];
-  satpamIn?: string; waktuIn?: string; odoIn?: number; fotoIn?: string[]; kondisi?: string;
+  outAt: number; odoOut: number; fotoOut: string[];
+  satpamIn?: string; inAt?: number; odoIn?: number; fotoIn?: string[]; kondisi?: string;
 };
 
 const drivers = ["Asep Sunandar", "Dedi Kurniawan", "Ujang Supriatna", "Rudi Hartono", "Yayan Ruhiyat"];
@@ -33,12 +33,17 @@ const kendaraan0: Kendaraan[] = [
   { nopol: "D 3456 PQR", merk: "Toyota Avanza", odo: 32890, kml: 13, status: "Tersedia" },
   { nopol: "D 7788 RST", merk: "Daihatsu Gran Max", odo: 54400, kml: 12, status: "Tersedia" },
 ];
+const dt = (day: number, h: number, m: number) => new Date(2026, 9, day, h, m).getTime();
 const trips0: Trip[] = [
-  { id: 1, nopol: "D 5678 XYZ", driver: "Dedi Kurniawan", tujuan: "Rapat Kantor Provinsi", satpamOut: SATPAM0, waktuOut: "14 Okt 2026 08:10", odoOut: 78300, fotoOut: [] },
-  { id: 2, nopol: "D 1234 ABC", driver: "Asep Sunandar", tujuan: "Monitoring Lembang", satpamOut: satpams[1] as string, waktuOut: "13 Okt 2026 07:45", odoOut: 45080, fotoOut: [],
-    satpamIn: SATPAM0, waktuIn: "13 Okt 2026 15:20", odoIn: 45210, fotoIn: [], kondisi: "Baik, tidak ada kerusakan" },
+  { id: 1, nopol: "D 5678 XYZ", driver: "Dedi Kurniawan", tujuan: "Rapat Kantor Provinsi", satpamOut: SATPAM0, outAt: dt(14, 8, 10), odoOut: 78300, fotoOut: [] },
+  { id: 2, nopol: "D 1234 ABC", driver: "Asep Sunandar", tujuan: "Monitoring Lembang", satpamOut: satpams[1] as string, outAt: dt(13, 7, 45), odoOut: 45080, fotoOut: [],
+    satpamIn: SATPAM0, inAt: dt(13, 15, 20), odoIn: 45210, fotoIn: [], kondisi: "Baik, tidak ada kerusakan" },
+  { id: 3, nopol: "D 9012 KLM", driver: "Ujang Supriatna", tujuan: "Survei Lapangan Cikalong", satpamOut: SATPAM0, outAt: dt(12, 8, 5), odoOut: 60800, fotoOut: [],
+    satpamIn: satpams[1] as string, inAt: dt(12, 12, 30), odoIn: 60985, fotoIn: [], kondisi: "Baik, tidak ada kerusakan" },
+  { id: 4, nopol: "D 3456 PQR", driver: "Rudi Hartono", tujuan: "Pengambilan Dokumen ke Bandung", satpamOut: satpams[1] as string, outAt: dt(9, 9, 0), odoOut: 32700, fotoOut: [],
+    satpamIn: SATPAM0, inAt: dt(9, 11, 15), odoIn: 32890, fotoIn: [], kondisi: "Ban serep perlu diperiksa" },
 ];
-const now = () => new Date().toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+const fmtWaktu = (ms?: number) => (ms ? new Date(ms).toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "-");
 
 const menus = ["Dashboard", "Check-Out", "Dalam Perjalanan", "Check-In", "Laporan", "Data Master"] as const;
 type Menu = (typeof menus)[number];
@@ -74,8 +79,8 @@ function App() {
   const [trips, setTrips] = useState(trips0);
   const [msg, setMsg] = useState("");
 
-  const aktif = trips.filter((t) => !t.waktuIn);
-  const selesai = trips.filter((t) => t.waktuIn);
+  const aktif = trips.filter((t) => !t.inAt);
+  const selesai = trips.filter((t) => t.inAt);
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(""), 3500); };
 
   // Check-out form
@@ -84,7 +89,7 @@ function App() {
   const coValid = co.nopol && co.driver && co.tujuan && Number(co.odo) >= (kSel?.odo ?? 0) && co.foto.every(Boolean);
   const submitOut = () => {
     if (!coValid) return;
-    setTrips((t) => [{ id: Date.now(), nopol: co.nopol, driver: co.driver, tujuan: co.tujuan, satpamOut: co.satpam, waktuOut: now(), odoOut: Number(co.odo), fotoOut: co.foto }, ...t]);
+    setTrips((t) => [{ id: Date.now(), nopol: co.nopol, driver: co.driver, tujuan: co.tujuan, satpamOut: co.satpam, outAt: Date.now(), odoOut: Number(co.odo), fotoOut: co.foto }, ...t]);
     setKend((ks) => ks.map((k) => (k.nopol === co.nopol ? { ...k, status: "Digunakan" } : k)));
     setCo({ nopol: "", driver: "", tujuan: "", satpam: SATPAM0, odo: "", foto: ["", "", ""] });
     flash("Check-out tercatat. Kendaraan kini berstatus Digunakan.");
@@ -97,7 +102,7 @@ function App() {
   const ciValid = tSel && Number(ci.odo) > tSel.odoOut && ci.foto.every(Boolean);
   const submitIn = () => {
     if (!ciValid || !tSel) return;
-    setTrips((t) => t.map((x) => (x.id === ci.id ? { ...x, satpamIn: ci.satpam, waktuIn: now(), odoIn: Number(ci.odo), fotoIn: ci.foto, kondisi: ci.kondisi } : x)));
+    setTrips((t) => t.map((x) => (x.id === ci.id ? { ...x, satpamIn: ci.satpam, inAt: Date.now(), odoIn: Number(ci.odo), fotoIn: ci.foto, kondisi: ci.kondisi } : x)));
     setKend((ks) => ks.map((k) => (k.nopol === tSel.nopol ? { ...k, status: "Tersedia", odo: Number(ci.odo) } : k)));
     setCi({ id: 0, satpam: SATPAM0, odo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan" });
     flash("Check-in tercatat. Jarak & BBM dihitung otomatis, kendaraan kembali Tersedia.");
@@ -105,7 +110,12 @@ function App() {
   };
 
   const jarak = (t: Trip) => (t.odoIn ?? t.odoOut) - t.odoOut;
-  const bbm = (t: Trip) => { const k = kend.find((x) => x.nopol === t.nopol); return k ? (jarak(t) / k.kml).toFixed(1) : "-"; };
+  const bbm = (t: Trip) => { const k = kend.find((x) => x.nopol === t.nopol); return k ? jarak(t) / k.kml : 0; };
+  const durasi = (t: Trip) => (t.inAt ?? t.outAt) - t.outAt;
+  const fmtDur = (ms: number) => { const h = Math.floor(ms / 3600000); const m = Math.round((ms % 3600000) / 60000); return h ? `${h} jam ${m} menit` : `${m} menit`; };
+  const totalKm = selesai.reduce((a, t) => a + jarak(t), 0);
+  const totalWaktu = selesai.reduce((a, t) => a + durasi(t), 0);
+  const totalBbm = selesai.reduce((a, t) => a + bbm(t), 0);
 
   return (
     <div className="min-h-screen font-sans md:flex">
@@ -140,6 +150,18 @@ function App() {
               ].map((s) => (
                 <Card key={s.l}><p className="text-sm text-muted-foreground">{s.l}</p><p className={`mt-1 text-3xl font-extrabold ${s.c}`}>{s.v}</p></Card>
               ))}
+            </div>
+            <div>
+              <h3 className="mb-3 text-sm font-bold uppercase tracking-widest text-muted-foreground">Rekap Perjalanan</h3>
+              <div className="grid gap-4 sm:grid-cols-3">
+                {[
+                  { l: "Total Trip (KM)", v: totalKm.toLocaleString("id-ID"), c: "text-primary" },
+                  { l: "Total Waktu Perjalanan", v: fmtDur(totalWaktu), c: "text-warning" },
+                  { l: "Total Estimasi BBM (Ltr)", v: `${totalBbm.toFixed(1)} Ltr`, c: "text-success" },
+                ].map((s) => (
+                  <Card key={s.l}><p className="text-sm text-muted-foreground">{s.l}</p><p className={`mt-1 text-2xl font-extrabold ${s.c}`}>{s.v}</p></Card>
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -183,7 +205,7 @@ function App() {
               <Card key={t.id} className="flex flex-wrap items-center justify-between gap-3 border-warning/50">
                 <div>
                   <p className="font-bold">🚗 {t.nopol} · <span className="text-primary">{t.driver}</span></p>
-                  <p className="text-sm text-muted-foreground">{t.tujuan} — keluar {t.waktuOut} · odometer {t.odoOut.toLocaleString("id-ID")} KM</p>
+                  <p className="text-sm text-muted-foreground">{t.tujuan} — keluar {fmtWaktu(t.outAt)} · odometer {t.odoOut.toLocaleString("id-ID")} KM</p>
                 </div>
                 <button className={btn} onClick={() => { setCi({ ...ci, id: t.id }); setMenu("Check-In"); }}>Check-In</button>
               </Card>
@@ -230,10 +252,10 @@ function App() {
               <tbody>{selesai.map((t) => (
                 <tr key={t.id} className="border-t align-top">
                   <td className="py-3 font-semibold">{t.nopol}</td><td>{t.driver}</td>
-                  <td>{t.waktuOut}<br /><span className="text-xs text-muted-foreground">{t.satpamOut}</span></td>
-                  <td>{t.waktuIn}<br /><span className="text-xs text-muted-foreground">{t.satpamIn}</span></td>
+                  <td>{fmtWaktu(t.outAt)}<br /><span className="text-xs text-muted-foreground">{t.satpamOut}</span></td>
+                  <td>{fmtWaktu(t.inAt)}<br /><span className="text-xs text-muted-foreground">{t.satpamIn}</span></td>
                   <td className="text-right font-semibold">{jarak(t).toLocaleString("id-ID")} KM</td>
-                  <td className="text-right">{bbm(t)} L</td>
+                  <td className="text-right">{bbm(t).toFixed(1)} L</td>
                   <td>{t.kondisi}</td>
                   <td><div className="flex gap-1">{[...t.fotoOut, ...(t.fotoIn ?? [])].map((f, i) => <img key={i} src={f} alt="" className="h-8 w-8 rounded object-cover" />)}
                     {t.fotoOut.length === 0 && <span className="text-xs text-muted-foreground">contoh</span>}</div></td>
