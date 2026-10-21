@@ -10,5 +10,6 @@
 <!-- LOVABLE:END -->
 
 - Keep initial vehicle and trip fixtures in a browser-safe data module so the ready-state requirement can be tested without rendering routes.
+- Derive unique drivers and work areas from imported vehicle assignments; keep missing odometer and fuel-efficiency values null rather than inventing operational data.
 - Give e-Overtime and e-SPPD distinct content routes, sharing the administrative form and service navigation to keep the mockup consistent.
 - Administrative submissions remain local mockup state until persistence and authentication are explicitly requested; do not imply production approval or storage.
