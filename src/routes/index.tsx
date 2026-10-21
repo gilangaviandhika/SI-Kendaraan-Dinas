@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { kendaraan0, trips0, type Trip } from "@/lib/vehicle-data";
+import { kendaraan0, trips0, drivers0, areas0, type Trip } from "@/lib/vehicle-data";
 import { ServiceNav } from "@/components/service-nav";
 import { Button } from "@/components/ui/button";
 
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/")({
   component: App,
 });
 
-const drivers = ["Asep Sunandar", "Dedi Kurniawan", "Ujang Supriatna", "Rudi Hartono", "Yayan Ruhiyat"];
+const drivers = drivers0;
 const satpams = ["Pak Hendra (Satpam)", "Pak Iwan (Satpam)"] as const satisfies readonly string[];
 const SATPAM0: string = satpams[0];
 const fmtWaktu = (ms?: number) => (ms ? new Date(ms).toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "-");
@@ -64,7 +64,7 @@ function App() {
   // Check-out form
   const [co, setCo] = useState({ nopol: "", driver: "", tujuan: "", satpam: SATPAM0, odo: "", foto: ["", "", ""] });
   const kSel = kend.find((k) => k.nopol === co.nopol);
-  const coValid = co.nopol && co.driver && co.tujuan && Number(co.odo) >= (kSel?.odo ?? 0) && co.foto.every(Boolean);
+  const coValid = co.nopol && co.driver && co.tujuan && co.odo.trim() !== "" && Number.isFinite(Number(co.odo)) && Number(co.odo) >= (kSel?.odo ?? 0) && co.foto.every(Boolean);
   const submitOut = () => {
     if (!coValid) return;
     setTrips((t) => [{ id: Date.now(), nopol: co.nopol, driver: co.driver, tujuan: co.tujuan, satpamOut: co.satpam, outAt: Date.now(), odoOut: Number(co.odo), fotoOut: co.foto }, ...t]);
@@ -88,12 +88,13 @@ function App() {
   };
 
   const jarak = (t: Trip) => (t.odoIn ?? t.odoOut) - t.odoOut;
-  const bbm = (t: Trip) => { const k = kend.find((x) => x.nopol === t.nopol); return k ? jarak(t) / k.kml : 0; };
+  const bbm = (t: Trip) => { const k = kend.find((x) => x.nopol === t.nopol); return k?.kml && k.kml > 0 ? jarak(t) / k.kml : null; };
   const durasi = (t: Trip) => (t.inAt ?? t.outAt) - t.outAt;
   const fmtDur = (ms: number) => { const h = Math.floor(ms / 3600000); const m = Math.round((ms % 3600000) / 60000); return h ? `${h} jam ${m} menit` : `${m} menit`; };
   const totalKm = selesai.reduce((a, t) => a + jarak(t), 0);
   const totalWaktu = selesai.reduce((a, t) => a + durasi(t), 0);
-  const totalBbm = selesai.reduce((a, t) => a + bbm(t), 0);
+  const totalBbm = selesai.reduce((a, t) => a + (bbm(t) ?? 0), 0);
+  const bbmLengkap = selesai.every((t) => bbm(t) !== null);
 
   return (
     <div className="min-h-screen font-sans md:flex">
@@ -136,7 +137,7 @@ function App() {
                 {[
                   { l: "Total Trip (KM)", v: totalKm.toLocaleString("id-ID"), c: "text-primary" },
                   { l: "Total Waktu Perjalanan", v: fmtDur(totalWaktu), c: "text-warning" },
-                  { l: "Total Estimasi BBM (Ltr)", v: `${totalBbm.toFixed(1)} Ltr`, c: "text-success" },
+                  { l: "Total Estimasi BBM (Ltr)", v: bbmLengkap ? `${totalBbm.toFixed(1)} Ltr` : "Belum tersedia", c: "text-success" },
                 ].map((s) => (
                   <Card key={s.l}><p className="text-sm text-muted-foreground">{s.l}</p><p className={`mt-1 text-2xl font-extrabold ${s.c}`}>{s.v}</p></Card>
                 ))}
@@ -163,7 +164,7 @@ function App() {
             <div>
               <p className="mb-1 text-sm font-bold">🧭 Odometer saat berangkat (KM)</p>
               <input type="number" className={inp} value={co.odo} onChange={(e) => setCo({ ...co, odo: e.target.value })} />
-              {kSel && <p className="mt-1 text-xs text-muted-foreground">Odometer terakhir tercatat: {kSel.odo.toLocaleString("id-ID")} KM</p>}
+              {kSel && <p className="mt-1 text-xs text-muted-foreground">Odometer terakhir tercatat: {kSel.odo === null ? "Belum tersedia" : `${kSel.odo.toLocaleString("id-ID")} KM`}</p>}
             </div>
             <div>
               <p className="mb-2 text-sm font-bold">Foto kendaraan</p>
@@ -238,7 +239,7 @@ function App() {
                   <td>{fmtWaktu(t.outAt)}<br /><span className="text-xs text-muted-foreground">{t.satpamOut}</span></td>
                   <td>{fmtWaktu(t.inAt)}<br /><span className="text-xs text-muted-foreground">{t.satpamIn}</span></td>
                   <td className="text-right font-semibold">{jarak(t).toLocaleString("id-ID")} KM</td>
-                  <td className="text-right">{bbm(t).toFixed(1)} L</td>
+                   <td className="text-right">{bbm(t) === null ? "Belum tersedia" : `${bbm(t)?.toFixed(1)} L`}</td>
                   <td>{t.kondisi}</td>
                   <td><div className="flex gap-1">{[...t.fotoOut, ...(t.fotoIn ?? [])].map((f, i) => <img key={i} src={f} alt="" className="h-8 w-8 rounded object-cover" />)}
                     {t.fotoOut.length === 0 && <span className="text-xs text-muted-foreground">contoh</span>}</div></td>
@@ -249,24 +250,33 @@ function App() {
         )}
 
         {menu === "Data Master" && (
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="space-y-6">
             <Card className="overflow-x-auto">
               <h3 className="mb-3 font-bold">Kendaraan</h3>
               <table className="w-full text-sm">
-                <thead className="text-left text-muted-foreground"><tr><th className="py-2">No. Polisi</th><th>Merk</th><th className="text-right">Odometer</th><th>Status</th></tr></thead>
+                <thead className="text-left text-muted-foreground"><tr><th className="py-2 pr-4">No. Polisi</th><th className="pr-4">Kendaraan</th><th className="pr-4">Driver</th><th className="pr-4">Area Kerja</th><th className="pr-4">Admin</th><th className="pr-4 text-right">Odometer (KM)</th><th>Status</th></tr></thead>
                 <tbody>{kend.map((k) => (
-                  <tr key={k.nopol} className="border-t"><td className="py-3 font-semibold">{k.nopol}</td><td>{k.merk}</td><td className="text-right">{k.odo.toLocaleString("id-ID")}</td>
+                  <tr key={k.nopol} className="border-t"><td className="whitespace-nowrap py-3 pr-4 font-semibold">{k.nopol}</td><td className="pr-4">{k.merk}</td><td className="pr-4">{k.driver}</td><td className="pr-4">{k.area}</td><td className="pr-4">{k.admin}</td><td className="pr-4 text-right">{k.odo?.toLocaleString("id-ID") ?? "—"}</td>
                     <td><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${k.status === "Tersedia" ? "bg-success/15 text-success" : "bg-warning/20 text-foreground"}`}>{k.status}</span></td></tr>
                 ))}</tbody>
               </table>
             </Card>
+            <div className="grid gap-6 xl:grid-cols-2">
             <Card>
               <h3 className="mb-3 font-bold">Driver</h3>
               <ul className="space-y-2 text-sm">{drivers.map((d) => (
-                <li key={d} className="flex justify-between border-t pt-2"><span>{d}</span>
+                <li key={d} className="flex justify-between gap-3 border-t pt-2"><div><span>{d}</span><p className="mt-1 text-xs text-muted-foreground">{kend.filter((k) => k.driver === d).map((k) => k.nopol).join(" · ")}</p></div>
                   <span className="text-muted-foreground">{aktif.some((t) => t.driver === d) ? "Sedang bertugas" : "Siap"}</span></li>
               ))}</ul>
             </Card>
+            <Card className="overflow-x-auto">
+              <h3 className="mb-3 font-bold">Area Kerja</h3>
+              <table className="w-full text-sm">
+                <thead className="text-left text-muted-foreground"><tr><th className="py-2 pr-4">Area Kerja</th><th className="pr-4">Admin</th><th className="text-right">Kendaraan</th></tr></thead>
+                <tbody>{areas0.map((area) => <tr key={area} className="border-t"><td className="py-3 pr-4">{area}</td><td className="pr-4">{[...new Set(kend.filter((k) => k.area === area).map((k) => k.admin))].join(", ")}</td><td className="text-right">{kend.filter((k) => k.area === area).length}</td></tr>)}</tbody>
+              </table>
+            </Card>
+            </div>
           </div>
         )}
       </main>
