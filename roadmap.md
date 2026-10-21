@@ -2,6 +2,6 @@
 - [x] Mockup alur check-out / check-in satpam sesuai flowchart (data contoh)
 - [x] Kosongkan semua perjalanan awal dan siapkan semua kendaraan
 - [x] Tambahkan menu serta mockup e-Overtime dan e-SPPD
-- [ ] Masukkan kendaraan, driver, area kerja, dan admin dari lampiran ke Data Master
+- [x] Masukkan kendaraan, driver, area kerja, dan admin dari lampiran ke Data Master
 - [ ] Login & peran (satpam, admin) — ditunda atas permintaan pengguna
 - [ ] Simpan data & foto ke database
