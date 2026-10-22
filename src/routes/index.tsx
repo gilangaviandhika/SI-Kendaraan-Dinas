@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { kendaraan0, trips0, drivers0, areas0, type Trip } from "@/lib/vehicle-data";
+import { type Trip } from "@/lib/vehicle-data";
+import { useFleet } from "@/components/fleet-provider";
+import { MasterNav } from "@/components/master-nav";
+import { isCheckoutValid } from "@/lib/checkout";
 import { ServiceNav } from "@/components/service-nav";
 import { Button } from "@/components/ui/button";
 
@@ -18,12 +21,11 @@ export const Route = createFileRoute("/")({
   component: App,
 });
 
-const drivers = drivers0;
 const satpams = ["Pak Hendra (Satpam)", "Pak Iwan (Satpam)"] as const satisfies readonly string[];
 const SATPAM0: string = satpams[0];
 const fmtWaktu = (ms?: number) => (ms ? new Date(ms).toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "-");
 
-const menus = ["Dashboard", "Check-Out", "Dalam Perjalanan", "Check-In", "Laporan", "Data Master"] as const;
+const menus = ["Dashboard", "Check-Out", "Dalam Perjalanan", "Check-In", "Laporan"] as const;
 type Menu = (typeof menus)[number];
 
 const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
@@ -53,8 +55,7 @@ function Steps({ items, active }: { items: string[]; active: number }) {
 
 function App() {
   const [menu, setMenu] = useState<Menu>("Dashboard");
-  const [kend, setKend] = useState(kendaraan0);
-  const [trips, setTrips] = useState(trips0);
+  const { kend, setKend, trips, setTrips, drivers, users } = useFleet();
   const [msg, setMsg] = useState("");
 
   const aktif = trips.filter((t) => !t.inAt);
@@ -62,14 +63,14 @@ function App() {
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(""), 3500); };
 
   // Check-out form
-  const [co, setCo] = useState({ nopol: "", driver: "", tujuan: "", satpam: SATPAM0, odo: "", foto: ["", "", ""] });
+  const [co, setCo] = useState({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", satpam: SATPAM0, odo: "", foto: ["", "", ""] });
   const kSel = kend.find((k) => k.nopol === co.nopol);
-  const coValid = co.nopol && co.driver && co.tujuan && co.odo.trim() !== "" && Number.isFinite(Number(co.odo)) && Number(co.odo) >= (kSel?.odo ?? 0) && co.foto.every(Boolean);
+  const coValid = isCheckoutValid(co, kSel);
   const submitOut = () => {
     if (!coValid) return;
-    setTrips((t) => [{ id: Date.now(), nopol: co.nopol, driver: co.driver, tujuan: co.tujuan, satpamOut: co.satpam, outAt: Date.now(), odoOut: Number(co.odo), fotoOut: co.foto }, ...t]);
+    setTrips((t) => [{ id: Date.now(), nopol: co.nopol, driver: co.driver, tujuan: co.tujuan, user: co.user.trim(), bidang: co.bidang.trim(), satpamOut: co.satpam, outAt: Date.now(), odoOut: Number(co.odo), fotoOut: co.foto }, ...t]);
     setKend((ks) => ks.map((k) => (k.nopol === co.nopol ? { ...k, status: "Digunakan" } : k)));
-    setCo({ nopol: "", driver: "", tujuan: "", satpam: SATPAM0, odo: "", foto: ["", "", ""] });
+    setCo({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", satpam: SATPAM0, odo: "", foto: ["", "", ""] });
     flash("Check-out tercatat. Kendaraan kini berstatus Digunakan.");
     setMenu("Dalam Perjalanan");
   };
@@ -112,6 +113,7 @@ function App() {
             </Button>
           ))}
         </nav>
+        <MasterNav />
         <ServiceNav />
       </aside>
 
@@ -150,20 +152,23 @@ function App() {
           <Card className="max-w-3xl space-y-5">
             <Steps items={["Data perjalanan", "Odometer", "Foto kendaraan", "Kirim"]} active={!co.nopol || !co.driver ? 0 : !co.odo ? 1 : !co.foto.every(Boolean) ? 2 : 3} />
             <div className="grid gap-3 md:grid-cols-2">
-              <select className={inp} value={co.nopol} onChange={(e) => setCo({ ...co, nopol: e.target.value, odo: String(kend.find((k) => k.nopol === e.target.value)?.odo ?? "") })}>
+              <select aria-label="Kendaraan tersedia" className={inp} value={co.nopol} onChange={(e) => setCo({ ...co, nopol: e.target.value, odo: String(kend.find((k) => k.nopol === e.target.value)?.odo ?? "") })}>
                 <option value="">Pilih kendaraan tersedia…</option>
                 {kend.filter((k) => k.status === "Tersedia").map((k) => <option key={k.nopol} value={k.nopol}>{k.nopol} — {k.merk}</option>)}
               </select>
-              <select className={inp} value={co.driver} onChange={(e) => setCo({ ...co, driver: e.target.value })}>
+              <select aria-label="Driver" className={inp} value={co.driver} onChange={(e) => setCo({ ...co, driver: e.target.value })}>
                 <option value="">Pilih driver…</option>
                 {drivers.filter((d) => !aktif.some((t) => t.driver === d)).map((d) => <option key={d}>{d}</option>)}
               </select>
+              <label className="space-y-1 text-sm font-semibold"><span>User</span><input className={inp} list="checkout-users" placeholder="Nama pegawai" value={co.user} onChange={(e) => { const user = users.find(u => u.nama === e.target.value); setCo({ ...co, user: e.target.value, bidang: user?.bidang || co.bidang }); }} /></label>
+              <datalist id="checkout-users">{users.map(u => <option key={u.nama} value={u.nama} />)}</datalist>
+              <label className="space-y-1 text-sm font-semibold"><span>Bidang</span><input className={inp} placeholder="Bidang pegawai" value={co.bidang} onChange={e => setCo({ ...co, bidang: e.target.value })} /></label>
               <input className={inp} placeholder="Tujuan / keperluan" value={co.tujuan} onChange={(e) => setCo({ ...co, tujuan: e.target.value })} />
               <select className={inp} value={co.satpam} onChange={(e) => setCo({ ...co, satpam: e.target.value })}>{satpams.map((s) => <option key={s}>{s}</option>)}</select>
             </div>
             <div>
               <p className="mb-1 text-sm font-bold">🧭 Odometer saat berangkat (KM)</p>
-              <input type="number" className={inp} value={co.odo} onChange={(e) => setCo({ ...co, odo: e.target.value })} />
+              <input aria-label="Odometer saat berangkat (KM)" type="number" className={inp} value={co.odo} onChange={(e) => setCo({ ...co, odo: e.target.value })} />
               {kSel && <p className="mt-1 text-xs text-muted-foreground">Odometer terakhir tercatat: {kSel.odo === null ? "Belum tersedia" : `${kSel.odo.toLocaleString("id-ID")} KM`}</p>}
             </div>
             <div>
@@ -174,7 +179,7 @@ function App() {
                 ))}
               </div>
             </div>
-            <button className={btn} disabled={!coValid} onClick={submitOut}>Kirim Data Check-Out</button>
+            <Button disabled={!coValid} onClick={submitOut}>Kirim Data Check-Out</Button>
           </Card>
         )}
 
@@ -185,9 +190,10 @@ function App() {
               <Card key={t.id} className="flex flex-wrap items-center justify-between gap-3 border-warning/50">
                 <div>
                   <p className="font-bold">🚗 {t.nopol} · <span className="text-primary">{t.driver}</span></p>
+                  <p className="text-sm">User: {t.user || "—"} · Bidang: {t.bidang || "—"}</p>
                   <p className="text-sm text-muted-foreground">{t.tujuan} — keluar {fmtWaktu(t.outAt)} · odometer {t.odoOut.toLocaleString("id-ID")} KM</p>
                 </div>
-                <button className={btn} onClick={() => { setCi({ ...ci, id: t.id }); setMenu("Check-In"); }}>Check-In</button>
+                <button className={btn} onClick={() => { setCi({ ...ci, id: t.id, user: t.user ?? "", bidang: t.bidang ?? "" }); setMenu("Check-In"); }}>Check-In</button>
               </Card>
             ))}
           </div>
@@ -197,7 +203,7 @@ function App() {
           <Card className="max-w-3xl space-y-5">
             <Steps items={["Pilih perjalanan", "Odometer akhir", "Foto kondisi", "Kirim"]} active={!ci.id ? 0 : !ci.odo ? 1 : !ci.foto.every(Boolean) ? 2 : 3} />
             <div className="grid gap-3 md:grid-cols-2">
-              <select className={inp} value={ci.id} onChange={(e) => setCi({ ...ci, id: Number(e.target.value) })}>
+              <select className={inp} value={ci.id} onChange={(e) => { const trip = aktif.find(t => t.id === Number(e.target.value)); setCi({ ...ci, id: Number(e.target.value), user: trip?.user ?? "", bidang: trip?.bidang ?? "" }); }}>
                 <option value={0}>Pilih kendaraan yang kembali…</option>
                 {aktif.map((t) => <option key={t.id} value={t.id}>{t.nopol} — {t.driver}</option>)}
               </select>
@@ -249,36 +255,7 @@ function App() {
           </Card>
         )}
 
-        {menu === "Data Master" && (
-          <div className="space-y-6">
-            <Card className="overflow-x-auto">
-              <h3 className="mb-3 font-bold">Kendaraan</h3>
-              <table className="w-full text-sm">
-                <thead className="text-left text-muted-foreground"><tr><th className="py-2 pr-4">No. Polisi</th><th className="pr-4">Kendaraan</th><th className="pr-4">Driver</th><th className="pr-4">Area Kerja</th><th className="pr-4">Admin</th><th className="pr-4 text-right">Odometer (KM)</th><th>Status</th></tr></thead>
-                <tbody>{kend.map((k) => (
-                  <tr key={k.nopol} className="border-t"><td className="whitespace-nowrap py-3 pr-4 font-semibold">{k.nopol}</td><td className="pr-4">{k.merk}</td><td className="pr-4">{k.driver}</td><td className="pr-4">{k.area}</td><td className="pr-4">{k.admin}</td><td className="pr-4 text-right">{k.odo?.toLocaleString("id-ID") ?? "—"}</td>
-                    <td><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${k.status === "Tersedia" ? "bg-success/15 text-success" : "bg-warning/20 text-foreground"}`}>{k.status}</span></td></tr>
-                ))}</tbody>
-              </table>
-            </Card>
-            <div className="grid gap-6 xl:grid-cols-2">
-            <Card>
-              <h3 className="mb-3 font-bold">Driver</h3>
-              <ul className="space-y-2 text-sm">{drivers.map((d) => (
-                <li key={d} className="flex justify-between gap-3 border-t pt-2"><div><span>{d}</span><p className="mt-1 text-xs text-muted-foreground">{kend.filter((k) => k.driver === d).map((k) => k.nopol).join(" · ")}</p></div>
-                  <span className="text-muted-foreground">{aktif.some((t) => t.driver === d) ? "Sedang bertugas" : "Siap"}</span></li>
-              ))}</ul>
-            </Card>
-            <Card className="overflow-x-auto">
-              <h3 className="mb-3 font-bold">Area Kerja</h3>
-              <table className="w-full text-sm">
-                <thead className="text-left text-muted-foreground"><tr><th className="py-2 pr-4">Area Kerja</th><th className="pr-4">Admin</th><th className="text-right">Kendaraan</th></tr></thead>
-                <tbody>{areas0.map((area) => <tr key={area} className="border-t"><td className="py-3 pr-4">{area}</td><td className="pr-4">{[...new Set(kend.filter((k) => k.area === area).map((k) => k.admin))].join(", ")}</td><td className="text-right">{kend.filter((k) => k.area === area).length}</td></tr>)}</tbody>
-              </table>
-            </Card>
-            </div>
-          </div>
-        )}
+
       </main>
     </div>
   );
