@@ -3,7 +3,7 @@
 - [x] Kosongkan semua perjalanan awal dan siapkan semua kendaraan
 - [x] Tambahkan menu serta mockup e-Overtime dan e-SPPD
 - [x] Masukkan kendaraan, driver, area kerja, dan admin dari lampiran ke Data Master
-- [ ] Pisahkan submaster Kendaraan, Driver, Area Kerja, User dengan tambah manual
-- [ ] Catat User dan Bidang pada Check-Out dan teruskan hingga laporan
+- [x] Pisahkan submaster Kendaraan, Driver, Area Kerja, User dengan tambah manual
+- [x] Catat User dan Bidang pada Check-Out dan teruskan hingga laporan
 - [ ] Login & peran (satpam, admin) — ditunda atas permintaan pengguna
 - [ ] Simpan data & foto ke database
