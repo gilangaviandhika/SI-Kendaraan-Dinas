@@ -11,9 +11,9 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "SI Kendaraan Dinas — UPT Bandung" },
-      { name: "description", content: "Monitoring keluar-masuk kendaraan dinas UPT Bandung: check-out, check-in, odometer, foto, dan laporan." },
+      { name: "description", content: "Monitoring Kendaraan Dinas UPT Bandung: check-out, check-in, odometer, foto, dan laporan." },
       { property: "og:title", content: "SI Kendaraan Dinas — UPT Bandung" },
-      { property: "og:description", content: "Monitoring keluar-masuk kendaraan dinas: odometer, foto kondisi, laporan perjalanan." },
+      { property: "og:description", content: "Monitoring Kendaraan Dinas: odometer, foto kondisi, laporan perjalanan." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -61,7 +61,7 @@ function App() {
   const aktif = trips.filter((t) => !t.inAt);
   const selesai = trips.filter((t) => t.inAt);
 
-  // Filter dashboard per area kerja
+  // Filter dashboard per wilayah kerja
   const [areaFilter, setAreaFilter] = useState("Semua");
   const areaOf = (nopol: string) => kend.find((k) => k.nopol === nopol)?.area;
   const kendF = areaFilter === "Semua" ? kend : kend.filter((k) => k.area === areaFilter);
@@ -103,7 +103,7 @@ function App() {
   const totalBbm = selesaiF.reduce((a, t) => a + (bbm(t) ?? 0), 0);
   const bbmLengkap = selesaiF.every((t) => bbm(t) !== null);
 
-  // Data grafik per area kerja
+  // Data grafik per wilayah kerja
   const grafikArea = areas.map((a) => {
     const kA = kend.filter((k) => k.area === a);
     const tA = selesai.filter((t) => areaOf(t.nopol) === a);
@@ -128,7 +128,7 @@ function App() {
         <div className="mb-6">
           <p className="text-xs uppercase tracking-widest text-accent">UPT Bandung</p>
           <h1 className="text-xl font-extrabold">SI Kendaraan Dinas</h1>
-          <p className="mt-1 text-xs opacity-70">Monitoring keluar-masuk kendaraan</p>
+          <p className="mt-1 text-xs opacity-70">Monitoring Kendaraan Dinas</p>
         </div>
         <nav className="flex gap-1 overflow-x-auto md:flex-col">
           {menus.map((m) => (
@@ -149,9 +149,9 @@ function App() {
         {menu === "Dashboard" && (
           <div className="space-y-6">
             <div className="flex flex-wrap items-center gap-3">
-              <label className="text-sm font-semibold text-muted-foreground" htmlFor="filter-area">Filter Area Kerja:</label>
-              <select id="filter-area" aria-label="Filter area kerja" className={`${inp} max-w-xs`} value={areaFilter} onChange={(e) => setAreaFilter(e.target.value)}>
-                <option value="Semua">Semua Area Kerja</option>
+              <label className="text-sm font-semibold text-muted-foreground" htmlFor="filter-area">Filter Wilayah Kerja:</label>
+              <select id="filter-area" aria-label="Filter wilayah kerja" className={`${inp} max-w-xs`} value={areaFilter} onChange={(e) => setAreaFilter(e.target.value)}>
+                <option value="Semua">Semua Wilayah Kerja</option>
                 {areas.map((a) => <option key={a} value={a}>{a}</option>)}
               </select>
             </div>
@@ -179,7 +179,7 @@ function App() {
             </div>
             <div className="grid gap-4 lg:grid-cols-2">
               <Card>
-                <h3 className="mb-1 font-bold">Kendaraan per Area Kerja</h3>
+                <h3 className="mb-1 font-bold">Kendaraan per Wilayah Kerja</h3>
                 <div className="mb-4 flex flex-wrap gap-3 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-primary" /> Total</span>
                   <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-warning" /> Digunakan</span>
@@ -206,7 +206,7 @@ function App() {
                 </div>
               </Card>
               <Card>
-                <h3 className="mb-1 font-bold">Perjalanan per Area Kerja</h3>
+                <h3 className="mb-1 font-bold">Perjalanan per Wilayah Kerja</h3>
                 <p className="mb-4 text-xs text-muted-foreground">Jumlah trip selesai, total jarak tempuh (KM), dan estimasi BBM (Ltr)</p>
                 <div className="space-y-4">
                   {grafikArea.map((g) => (
