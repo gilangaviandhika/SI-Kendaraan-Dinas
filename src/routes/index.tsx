@@ -254,7 +254,7 @@ function App() {
             </div>
             <div>
               <p className="mb-2 text-sm font-bold">Foto kendaraan</p>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3 max-w-md">
                 {["Depan", "Belakang"].map((l, i) => (
                   <Foto key={l} label={l} value={co.foto[i]} onChange={(u) => setCo({ ...co, foto: co.foto.map((f, j) => (j === i ? u : f)) })} />
                 ))}
