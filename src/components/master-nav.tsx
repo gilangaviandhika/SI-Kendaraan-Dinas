@@ -9,7 +9,7 @@ export function MasterNav() {
     <div className="grid grid-cols-2 gap-1 md:grid-cols-1">
       <Link to="/master/kendaraan" className={cls} activeProps={activeProps}><Car size={16} />Kendaraan</Link>
       <Link to="/master/driver" className={cls} activeProps={activeProps}><Users size={16} />Driver</Link>
-      <Link to="/master/area-kerja" className={cls} activeProps={activeProps}><MapPin size={16} />Area Kerja</Link>
+      <Link to="/master/area-kerja" className={cls} activeProps={activeProps}><MapPin size={16} />Wilayah Kerja</Link>
       <Link to="/master/user" className={cls} activeProps={activeProps}><UserRound size={16} />User</Link>
     </div>
   </nav>;
