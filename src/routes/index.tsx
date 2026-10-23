@@ -55,11 +55,17 @@ function Steps({ items, active }: { items: string[]; active: number }) {
 
 function App() {
   const [menu, setMenu] = useState<Menu>("Dashboard");
-  const { kend, setKend, trips, setTrips, drivers, users } = useFleet();
+  const { kend, setKend, trips, setTrips, drivers, users, areas } = useFleet();
   const [msg, setMsg] = useState("");
 
   const aktif = trips.filter((t) => !t.inAt);
   const selesai = trips.filter((t) => t.inAt);
+
+  // Filter dashboard per area kerja
+  const [areaFilter, setAreaFilter] = useState("Semua");
+  const areaOf = (nopol: string) => kend.find((k) => k.nopol === nopol)?.area;
+  const kendF = areaFilter === "Semua" ? kend : kend.filter((k) => k.area === areaFilter);
+  const selesaiF = areaFilter === "Semua" ? selesai : selesai.filter((t) => areaOf(t.nopol) === areaFilter);
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(""), 3500); };
 
   // Check-out form
@@ -92,10 +98,26 @@ function App() {
   const bbm = (t: Trip) => { const k = kend.find((x) => x.nopol === t.nopol); return k?.kml && k.kml > 0 ? jarak(t) / k.kml : null; };
   const durasi = (t: Trip) => (t.inAt ?? t.outAt) - t.outAt;
   const fmtDur = (ms: number) => { const h = Math.floor(ms / 3600000); const m = Math.round((ms % 3600000) / 60000); return h ? `${h} jam ${m} menit` : `${m} menit`; };
-  const totalKm = selesai.reduce((a, t) => a + jarak(t), 0);
-  const totalWaktu = selesai.reduce((a, t) => a + durasi(t), 0);
-  const totalBbm = selesai.reduce((a, t) => a + (bbm(t) ?? 0), 0);
-  const bbmLengkap = selesai.every((t) => bbm(t) !== null);
+  const totalKm = selesaiF.reduce((a, t) => a + jarak(t), 0);
+  const totalWaktu = selesaiF.reduce((a, t) => a + durasi(t), 0);
+  const totalBbm = selesaiF.reduce((a, t) => a + (bbm(t) ?? 0), 0);
+  const bbmLengkap = selesaiF.every((t) => bbm(t) !== null);
+
+  // Data grafik per area kerja
+  const grafikArea = areas.map((a) => {
+    const kA = kend.filter((k) => k.area === a);
+    const tA = selesai.filter((t) => areaOf(t.nopol) === a);
+    return {
+      area: a,
+      total: kA.length,
+      digunakan: kA.filter((k) => k.status === "Digunakan").length,
+      tersedia: kA.filter((k) => k.status === "Tersedia").length,
+      trip: tA.length,
+      km: tA.reduce((s, t) => s + jarak(t), 0),
+    };
+  });
+  const maxKend = Math.max(1, ...grafikArea.map((g) => g.total));
+  const maxKm = Math.max(1, ...grafikArea.map((g) => g.km));
 
   return (
     <div className="min-h-screen font-sans md:flex">
@@ -123,18 +145,25 @@ function App() {
 
         {menu === "Dashboard" && (
           <div className="space-y-6">
+            <div className="flex flex-wrap items-center gap-3">
+              <label className="text-sm font-semibold text-muted-foreground" htmlFor="filter-area">Filter Area Kerja:</label>
+              <select id="filter-area" aria-label="Filter area kerja" className={`${inp} max-w-xs`} value={areaFilter} onChange={(e) => setAreaFilter(e.target.value)}>
+                <option value="Semua">Semua Area Kerja</option>
+                {areas.map((a) => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </div>
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
               {[
-                { l: "Total Kendaraan", v: kend.length, c: "text-primary" },
-                { l: "Sedang Digunakan", v: kend.filter((k) => k.status === "Digunakan").length, c: "text-warning" },
-                { l: "Tersedia", v: kend.filter((k) => k.status === "Tersedia").length, c: "text-success" },
-                { l: "Perjalanan Selesai", v: selesai.length, c: "text-foreground" },
+                { l: "Total Kendaraan", v: kendF.length, c: "text-primary" },
+                { l: "Sedang Digunakan", v: kendF.filter((k) => k.status === "Digunakan").length, c: "text-warning" },
+                { l: "Tersedia", v: kendF.filter((k) => k.status === "Tersedia").length, c: "text-success" },
+                { l: "Perjalanan Selesai", v: selesaiF.length, c: "text-foreground" },
               ].map((s) => (
                 <Card key={s.l}><p className="text-sm text-muted-foreground">{s.l}</p><p className={`mt-1 text-3xl font-extrabold ${s.c}`}>{s.v}</p></Card>
               ))}
             </div>
             <div>
-              <h3 className="mb-3 text-sm font-bold uppercase tracking-widest text-muted-foreground">Rekap Perjalanan</h3>
+              <h3 className="mb-3 text-sm font-bold uppercase tracking-widest text-muted-foreground">Rekap Perjalanan{areaFilter !== "Semua" && ` — ${areaFilter}`}</h3>
               <div className="grid gap-4 sm:grid-cols-3">
                 {[
                   { l: "Total Trip (KM)", v: totalKm.toLocaleString("id-ID"), c: "text-primary" },
@@ -144,6 +173,58 @@ function App() {
                   <Card key={s.l}><p className="text-sm text-muted-foreground">{s.l}</p><p className={`mt-1 text-2xl font-extrabold ${s.c}`}>{s.v}</p></Card>
                 ))}
               </div>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <Card>
+                <h3 className="mb-1 font-bold">Kendaraan per Area Kerja</h3>
+                <div className="mb-4 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-primary" /> Total</span>
+                  <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-warning" /> Digunakan</span>
+                  <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-success" /> Tersedia</span>
+                </div>
+                <div className="space-y-4">
+                  {grafikArea.map((g) => (
+                    <div key={g.area}>
+                      <p className="mb-1 text-xs font-semibold">{g.area}</p>
+                      {[
+                        { v: g.total, c: "bg-primary" },
+                        { v: g.digunakan, c: "bg-warning" },
+                        { v: g.tersedia, c: "bg-success" },
+                      ].map((b, i) => (
+                        <div key={i} className="mb-1 flex items-center gap-2">
+                          <div className="h-3 flex-1 overflow-hidden rounded-full bg-muted">
+                            <div className={`h-full rounded-full ${b.c}`} style={{ width: `${(b.v / maxKend) * 100}%` }} />
+                          </div>
+                          <span className="w-6 text-right text-xs font-bold">{b.v}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </Card>
+              <Card>
+                <h3 className="mb-1 font-bold">Perjalanan per Area Kerja</h3>
+                <p className="mb-4 text-xs text-muted-foreground">Jumlah trip selesai dan total jarak tempuh (KM)</p>
+                <div className="space-y-4">
+                  {grafikArea.map((g) => (
+                    <div key={g.area}>
+                      <p className="mb-1 text-xs font-semibold">{g.area}</p>
+                      <div className="mb-1 flex items-center gap-2">
+                        <div className="h-3 flex-1 overflow-hidden rounded-full bg-muted">
+                          <div className="h-full rounded-full bg-primary" style={{ width: `${(g.trip / Math.max(1, ...grafikArea.map((x) => x.trip))) * 100}%` }} />
+                        </div>
+                        <span className="w-14 text-right text-xs font-bold">{g.trip} trip</span>
+                      </div>
+                      <div className="mb-1 flex items-center gap-2">
+                        <div className="h-3 flex-1 overflow-hidden rounded-full bg-muted">
+                          <div className="h-full rounded-full bg-accent" style={{ width: `${(g.km / maxKm) * 100}%` }} />
+                        </div>
+                        <span className="w-14 text-right text-xs font-bold">{g.km.toLocaleString("id-ID")} km</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
             </div>
           </div>
         )}
