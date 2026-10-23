@@ -55,7 +55,7 @@ function Steps({ items, active }: { items: string[]; active: number }) {
 
 function App() {
   const [menu, setMenu] = useState<Menu>("Dashboard");
-  const { kend, setKend, trips, setTrips, drivers, users } = useFleet();
+  const { kend, setKend, trips, setTrips, drivers, users, areas } = useFleet();
   const [msg, setMsg] = useState("");
 
   const aktif = trips.filter((t) => !t.inAt);
