@@ -7,5 +7,6 @@
 - [x] Catat User dan Bidang pada Check-Out dan teruskan hingga laporan
 - [x] Tambahkan edit manual per baris pada keempat submaster
 - [x] Filter dashboard per area kerja + grafik per area kerja
+- [x] Foto Check-Out menjadi 2 (Depan & Belakang)
 - [ ] Login & peran (satpam, admin) — ditunda atas permintaan pengguna
 - [ ] Simpan data & foto ke database
