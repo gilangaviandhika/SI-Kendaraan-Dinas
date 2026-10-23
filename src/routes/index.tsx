@@ -69,14 +69,14 @@ function App() {
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(""), 3500); };
 
   // Check-out form
-  const [co, setCo] = useState({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", satpam: SATPAM0, odo: "", foto: ["", "", ""] });
+  const [co, setCo] = useState({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", satpam: SATPAM0, odo: "", foto: ["", ""] });
   const kSel = kend.find((k) => k.nopol === co.nopol);
   const coValid = isCheckoutValid(co, kSel);
   const submitOut = () => {
     if (!coValid) return;
     setTrips((t) => [{ id: Date.now(), nopol: co.nopol, driver: co.driver, tujuan: co.tujuan, user: co.user.trim(), bidang: co.bidang.trim(), satpamOut: co.satpam, outAt: Date.now(), odoOut: Number(co.odo), fotoOut: co.foto }, ...t]);
     setKend((ks) => ks.map((k) => (k.nopol === co.nopol ? { ...k, status: "Digunakan" } : k)));
-    setCo({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", satpam: SATPAM0, odo: "", foto: ["", "", ""] });
+    setCo({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", satpam: SATPAM0, odo: "", foto: ["", ""] });
     flash("Check-out tercatat. Kendaraan kini berstatus Digunakan.");
     setMenu("Dalam Perjalanan");
   };
@@ -255,7 +255,7 @@ function App() {
             <div>
               <p className="mb-2 text-sm font-bold">Foto kendaraan</p>
               <div className="grid grid-cols-3 gap-3">
-                {["Depan", "Samping", "Belakang"].map((l, i) => (
+                {["Depan", "Belakang"].map((l, i) => (
                   <Foto key={l} label={l} value={co.foto[i]} onChange={(u) => setCo({ ...co, foto: co.foto.map((f, j) => (j === i ? u : f)) })} />
                 ))}
               </div>
