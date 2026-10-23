@@ -98,10 +98,26 @@ function App() {
   const bbm = (t: Trip) => { const k = kend.find((x) => x.nopol === t.nopol); return k?.kml && k.kml > 0 ? jarak(t) / k.kml : null; };
   const durasi = (t: Trip) => (t.inAt ?? t.outAt) - t.outAt;
   const fmtDur = (ms: number) => { const h = Math.floor(ms / 3600000); const m = Math.round((ms % 3600000) / 60000); return h ? `${h} jam ${m} menit` : `${m} menit`; };
-  const totalKm = selesai.reduce((a, t) => a + jarak(t), 0);
-  const totalWaktu = selesai.reduce((a, t) => a + durasi(t), 0);
-  const totalBbm = selesai.reduce((a, t) => a + (bbm(t) ?? 0), 0);
-  const bbmLengkap = selesai.every((t) => bbm(t) !== null);
+  const totalKm = selesaiF.reduce((a, t) => a + jarak(t), 0);
+  const totalWaktu = selesaiF.reduce((a, t) => a + durasi(t), 0);
+  const totalBbm = selesaiF.reduce((a, t) => a + (bbm(t) ?? 0), 0);
+  const bbmLengkap = selesaiF.every((t) => bbm(t) !== null);
+
+  // Data grafik per area kerja
+  const grafikArea = areas.map((a) => {
+    const kA = kend.filter((k) => k.area === a);
+    const tA = selesai.filter((t) => areaOf(t.nopol) === a);
+    return {
+      area: a,
+      total: kA.length,
+      digunakan: kA.filter((k) => k.status === "Digunakan").length,
+      tersedia: kA.filter((k) => k.status === "Tersedia").length,
+      trip: tA.length,
+      km: tA.reduce((s, t) => s + jarak(t), 0),
+    };
+  });
+  const maxKend = Math.max(1, ...grafikArea.map((g) => g.total));
+  const maxKm = Math.max(1, ...grafikArea.map((g) => g.km));
 
   return (
     <div className="min-h-screen font-sans md:flex">
