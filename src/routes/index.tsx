@@ -145,18 +145,25 @@ function App() {
 
         {menu === "Dashboard" && (
           <div className="space-y-6">
+            <div className="flex flex-wrap items-center gap-3">
+              <label className="text-sm font-semibold text-muted-foreground" htmlFor="filter-area">Filter Area Kerja:</label>
+              <select id="filter-area" aria-label="Filter area kerja" className={`${inp} max-w-xs`} value={areaFilter} onChange={(e) => setAreaFilter(e.target.value)}>
+                <option value="Semua">Semua Area Kerja</option>
+                {areas.map((a) => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </div>
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
               {[
-                { l: "Total Kendaraan", v: kend.length, c: "text-primary" },
-                { l: "Sedang Digunakan", v: kend.filter((k) => k.status === "Digunakan").length, c: "text-warning" },
-                { l: "Tersedia", v: kend.filter((k) => k.status === "Tersedia").length, c: "text-success" },
-                { l: "Perjalanan Selesai", v: selesai.length, c: "text-foreground" },
+                { l: "Total Kendaraan", v: kendF.length, c: "text-primary" },
+                { l: "Sedang Digunakan", v: kendF.filter((k) => k.status === "Digunakan").length, c: "text-warning" },
+                { l: "Tersedia", v: kendF.filter((k) => k.status === "Tersedia").length, c: "text-success" },
+                { l: "Perjalanan Selesai", v: selesaiF.length, c: "text-foreground" },
               ].map((s) => (
                 <Card key={s.l}><p className="text-sm text-muted-foreground">{s.l}</p><p className={`mt-1 text-3xl font-extrabold ${s.c}`}>{s.v}</p></Card>
               ))}
             </div>
             <div>
-              <h3 className="mb-3 text-sm font-bold uppercase tracking-widest text-muted-foreground">Rekap Perjalanan</h3>
+              <h3 className="mb-3 text-sm font-bold uppercase tracking-widest text-muted-foreground">Rekap Perjalanan{areaFilter !== "Semua" && ` — ${areaFilter}`}</h3>
               <div className="grid gap-4 sm:grid-cols-3">
                 {[
                   { l: "Total Trip (KM)", v: totalKm.toLocaleString("id-ID"), c: "text-primary" },
@@ -166,6 +173,58 @@ function App() {
                   <Card key={s.l}><p className="text-sm text-muted-foreground">{s.l}</p><p className={`mt-1 text-2xl font-extrabold ${s.c}`}>{s.v}</p></Card>
                 ))}
               </div>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <Card>
+                <h3 className="mb-1 font-bold">Kendaraan per Area Kerja</h3>
+                <div className="mb-4 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-primary" /> Total</span>
+                  <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-warning" /> Digunakan</span>
+                  <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-success" /> Tersedia</span>
+                </div>
+                <div className="space-y-4">
+                  {grafikArea.map((g) => (
+                    <div key={g.area}>
+                      <p className="mb-1 text-xs font-semibold">{g.area}</p>
+                      {[
+                        { v: g.total, c: "bg-primary" },
+                        { v: g.digunakan, c: "bg-warning" },
+                        { v: g.tersedia, c: "bg-success" },
+                      ].map((b, i) => (
+                        <div key={i} className="mb-1 flex items-center gap-2">
+                          <div className="h-3 flex-1 overflow-hidden rounded-full bg-muted">
+                            <div className={`h-full rounded-full ${b.c}`} style={{ width: `${(b.v / maxKend) * 100}%` }} />
+                          </div>
+                          <span className="w-6 text-right text-xs font-bold">{b.v}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </Card>
+              <Card>
+                <h3 className="mb-1 font-bold">Perjalanan per Area Kerja</h3>
+                <p className="mb-4 text-xs text-muted-foreground">Jumlah trip selesai dan total jarak tempuh (KM)</p>
+                <div className="space-y-4">
+                  {grafikArea.map((g) => (
+                    <div key={g.area}>
+                      <p className="mb-1 text-xs font-semibold">{g.area}</p>
+                      <div className="mb-1 flex items-center gap-2">
+                        <div className="h-3 flex-1 overflow-hidden rounded-full bg-muted">
+                          <div className="h-full rounded-full bg-primary" style={{ width: `${(g.trip / Math.max(1, ...grafikArea.map((x) => x.trip))) * 100}%` }} />
+                        </div>
+                        <span className="w-14 text-right text-xs font-bold">{g.trip} trip</span>
+                      </div>
+                      <div className="mb-1 flex items-center gap-2">
+                        <div className="h-3 flex-1 overflow-hidden rounded-full bg-muted">
+                          <div className="h-full rounded-full bg-accent" style={{ width: `${(g.km / maxKm) * 100}%` }} />
+                        </div>
+                        <span className="w-14 text-right text-xs font-bold">{g.km.toLocaleString("id-ID")} km</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
             </div>
           </div>
         )}
