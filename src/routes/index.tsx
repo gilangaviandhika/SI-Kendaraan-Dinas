@@ -60,6 +60,12 @@ function App() {
 
   const aktif = trips.filter((t) => !t.inAt);
   const selesai = trips.filter((t) => t.inAt);
+
+  // Filter dashboard per area kerja
+  const [areaFilter, setAreaFilter] = useState("Semua");
+  const areaOf = (nopol: string) => kend.find((k) => k.nopol === nopol)?.area;
+  const kendF = areaFilter === "Semua" ? kend : kend.filter((k) => k.area === areaFilter);
+  const selesaiF = areaFilter === "Semua" ? selesai : selesai.filter((t) => areaOf(t.nopol) === areaFilter);
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(""), 3500); };
 
   // Check-out form
