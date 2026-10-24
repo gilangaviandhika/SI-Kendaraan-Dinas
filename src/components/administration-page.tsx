@@ -3,14 +3,16 @@ import { useState } from "react";
 import { ArrowLeft, Plus, ClipboardList, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ServiceNav } from "@/components/service-nav";
+import { useFleet } from "@/components/fleet-provider";
 
-type RequestRow = { id: number; nama: string; tanggal: string; akhir: string; mulai: string; sampai: string; tujuan: string; keperluan: string };
-const emptyForm = { nama: "", tanggal: "", akhir: "", mulai: "", sampai: "", tujuan: "", keperluan: "" };
+type RequestRow = { id: number; nama: string; user: string; bidang: string; tanggal: string; akhir: string; mulai: string; sampai: string; tujuan: string; keperluan: string };
+const emptyForm = { nama: "", user: "", bidang: "", tanggal: "", akhir: "", mulai: "", sampai: "", tujuan: "", keperluan: "" };
 const inputClass = "w-full rounded-lg border bg-background px-3 py-2 text-sm";
 
 export function AdministrationPage({ kind }: { kind: "overtime" | "sppd" }) {
   const isOvertime = kind === "overtime";
   const title = isOvertime ? "e-Overtime" : "e-SPPD";
+  const { users } = useFleet();
   const [rows, setRows] = useState<RequestRow[]>([]);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -38,6 +40,9 @@ export function AdministrationPage({ kind }: { kind: "overtime" | "sppd" }) {
             <form onSubmit={(e) => { e.preventDefault(); setRows((old) => [{ ...form, id: Date.now() }, ...old]); setForm(emptyForm); setOpen(false); setMessage("Pengajuan tercatat dalam mockup ini."); }}>
               <div className="grid gap-4 sm:grid-cols-2">
                 {field("Nama pegawai", "nama")}
+                <label className="space-y-1 text-sm font-semibold"><span>User</span><input required className={inputClass} list="administration-users" value={form.user} onChange={e => { const user = users.find(u => u.nama === e.target.value); setForm({ ...form, user: e.target.value, bidang: user?.bidang || form.bidang }); }} /></label>
+                <datalist id="administration-users">{users.map(u => <option key={u.nama} value={u.nama} />)}</datalist>
+                {field("Bidang", "bidang")}
                 {field(isOvertime ? "Tanggal lembur" : "Tanggal berangkat", "tanggal", "date")}
                 {isOvertime ? <>{field("Jam mulai", "mulai", "time")}{field("Jam selesai", "sampai", "time")}</> : <>{field("Tanggal kembali", "akhir", "date", form.tanggal)}{field("Tujuan perjalanan", "tujuan")}</>}
                 <label className="space-y-1 text-sm font-semibold sm:col-span-2"><span>{isOvertime ? "Uraian pekerjaan" : "Keperluan dinas"}</span><textarea required className={inputClass} rows={3} value={form.keperluan} onChange={(e) => setForm({ ...form, keperluan: e.target.value })} /></label>
@@ -48,7 +53,7 @@ export function AdministrationPage({ kind }: { kind: "overtime" | "sppd" }) {
         )}
         <h3 className="mb-3 font-bold">Daftar Pengajuan</h3>
         {rows.length === 0 ? <div className="flex flex-col items-center border-y py-16 text-muted-foreground"><ClipboardList className="mb-3 h-9 w-9" /><p className="text-sm">{isOvertime ? "Belum ada pengajuan lembur." : "Belum ada pengajuan SPPD."}</p></div> : (
-          <div className="overflow-x-auto"><table className="w-full min-w-[620px] text-left text-sm"><thead className="text-muted-foreground"><tr><th className="py-3">Pegawai</th><th>Tanggal</th><th>{isOvertime ? "Waktu" : "Tujuan"}</th><th>Keperluan</th><th>Status</th></tr></thead><tbody>{rows.map((row) => <tr key={row.id} className="border-t align-top"><td className="py-4 font-semibold">{row.nama}</td><td className="py-4">{row.tanggal}{!isOvertime && <> — {row.akhir}</>}</td><td className="py-4">{isOvertime ? `${row.mulai}–${row.sampai}` : row.tujuan}</td><td className="max-w-64 break-words py-4">{row.keperluan}</td><td className="py-4"><span className="rounded-md bg-warning/20 px-2 py-1 text-xs font-semibold">Menunggu</span></td></tr>)}</tbody></table></div>
+          <div className="overflow-x-auto"><table className="w-full min-w-[820px] text-left text-sm"><thead className="text-muted-foreground"><tr><th className="py-3">Pegawai</th><th>User</th><th>Bidang</th><th>Tanggal</th><th>{isOvertime ? "Waktu" : "Tujuan"}</th><th>Keperluan</th><th>Status</th></tr></thead><tbody>{rows.map((row) => <tr key={row.id} className="border-t align-top"><td className="py-4 font-semibold">{row.nama}</td><td className="max-w-48 break-words py-4">{row.user}</td><td className="max-w-48 break-words py-4">{row.bidang}</td><td className="py-4">{row.tanggal}{!isOvertime && <> — {row.akhir}</>}</td><td className="py-4">{isOvertime ? `${row.mulai}–${row.sampai}` : row.tujuan}</td><td className="max-w-64 break-words py-4">{row.keperluan}</td><td className="py-4"><span className="rounded-md bg-warning/20 px-2 py-1 text-xs font-semibold">Menunggu</span></td></tr>)}</tbody></table></div>
         )}
       </main>
     </div>

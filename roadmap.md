@@ -9,5 +9,7 @@
 - [x] Filter dashboard per area kerja + grafik per area kerja
 - [x] Foto Check-Out menjadi 2 (Depan & Belakang)
 - [x] Grafik Perjalanan per Area Kerja: trip selesai, total jarak, dan estimasi BBM
+- [x] Tambahkan User dan Bidang pada e-Overtime dan e-SPPD
+- [x] Unduh laporan perjalanan sebagai Excel
 - [ ] Login & peran (satpam, admin) — ditunda atas permintaan pengguna
 - [ ] Simpan data & foto ke database
