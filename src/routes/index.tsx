@@ -161,8 +161,8 @@ function App() {
         {menu === "Dashboard" && (
           <div className="space-y-6">
             <div className="flex flex-wrap items-center gap-3">
-              <label className="text-sm font-semibold text-muted-foreground" htmlFor="filter-area">Filter Wilayah Kerja:</label>
-              <select id="filter-area" aria-label="Filter wilayah kerja" className={`${inp} max-w-xs`} value={areaFilter} onChange={(e) => setAreaFilter(e.target.value)}>
+              <label className="text-sm font-semibold text-muted-foreground" htmlFor="filter-area">Wilayah Kerja</label>
+              <select id="filter-area" aria-label="Wilayah Kerja" className={`${inp} max-w-xs`} value={areaFilter} onChange={(e) => setAreaFilter(e.target.value)}>
                 <option value="Semua">Semua Wilayah Kerja</option>
                 {areas.map((a) => <option key={a} value={a}>{a}</option>)}
               </select>
