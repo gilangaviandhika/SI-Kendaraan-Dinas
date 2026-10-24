@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Download } from "lucide-react";
+import { createReportBlob, deliverReport } from "@/lib/report-export";
 import { type Trip } from "@/lib/vehicle-data";
 import { useFleet } from "@/components/fleet-provider";
 import { MasterNav } from "@/components/master-nav";
@@ -57,6 +59,16 @@ function App() {
   const [menu, setMenu] = useState<Menu>("Dashboard");
   const { kend, setKend, trips, setTrips, drivers, users, areas } = useFleet();
   const [msg, setMsg] = useState("");
+  const [reportBlob, setReportBlob] = useState<Blob | null>(null);
+  const [reportError, setReportError] = useState("");
+  useEffect(() => {
+    if (menu !== "Laporan") return;
+    let cancelled = false;
+    setReportBlob(null);
+    setReportError("");
+    createReportBlob(trips, kend).then(blob => { if (!cancelled) setReportBlob(blob); }).catch(() => { if (!cancelled) setReportError("Laporan belum dapat disiapkan. Buka kembali menu Laporan untuk mencoba lagi."); });
+    return () => { cancelled = true; };
+  }, [menu, trips, kend]);
 
   const aktif = trips.filter((t) => !t.inAt);
   const selesai = trips.filter((t) => t.inAt);
@@ -322,7 +334,11 @@ function App() {
 
         {menu === "Laporan" && (
           <Card className="overflow-x-auto">
-            <h3 className="mb-3 font-bold">Log perjalanan (dihitung otomatis)</h3>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <h3 className="font-bold">Log perjalanan (dihitung otomatis)</h3>
+              <Button disabled={!reportBlob} onClick={() => { if (reportBlob) void deliverReport(reportBlob).catch(() => flash("Unduhan gagal. Silakan coba lagi.")); }}><Download size={16} />{reportBlob ? "Download Laporan" : "Menyiapkan Excel…"}</Button>
+            </div>
+            {reportError && <p role="alert" className="mb-3 text-sm text-destructive">{reportError}</p>}
             <table className="w-full text-sm">
               <thead className="text-left text-muted-foreground"><tr>
                 <th className="py-2">Kendaraan</th><th>Driver</th><th>User</th><th>Bidang</th><th>Keluar</th><th>Kembali</th><th className="text-right">Jarak</th><th className="text-right">Est. BBM</th><th>Kondisi</th><th>Foto</th>

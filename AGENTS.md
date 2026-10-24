@@ -17,3 +17,4 @@
 - Give each master category a distinct child route under an Outlet layout so categories can be opened independently.
 - Capture passenger and department at checkout and prefill check-in from the trip so identity is retained through the journey.
 - Apply master edits through the fleet provider, synchronizing vehicle assignments and renamed plate trip references while retaining trip passenger/driver snapshots, so related records remain usable.
+- Prepare Excel reports from current local completed trips before the download click, using a dynamic ExcelJS import and numeric formulas with cached results, so downloads retain user activation and remain editable without implying persisted data.
