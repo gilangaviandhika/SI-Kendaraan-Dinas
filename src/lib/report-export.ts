@@ -59,8 +59,7 @@ export async function createReportBlob(trips: Trip[], vehicles: Kendaraan[]) {
   return new Blob([new Uint8Array(bytes)], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
 }
 
-export async function deliverReport(blob: Blob) {
-  const filename = `Laporan-Kendaraan-Dinas-${new Date().toISOString().slice(0, 10)}.xlsx`;
+export async function deliverReport(blob: Blob, filename = `Laporan-Kendaraan-Dinas-${new Date().toISOString().slice(0, 10)}.xlsx`) {
   const file = new File([blob], filename, { type: blob.type });
   if (matchMedia("(pointer: coarse)").matches && navigator.canShare?.({ files: [file] })) {
     try { await navigator.share({ files: [file], title: filename }); return; }

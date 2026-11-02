@@ -11,5 +11,6 @@
 - [x] Grafik Perjalanan per Area Kerja: trip selesai, total jarak, dan estimasi BBM
 - [x] Tambahkan User dan Bidang pada e-Overtime dan e-SPPD
 - [x] Unduh laporan perjalanan sebagai Excel
+- [x] Unduh laporan Excel e-Overtime/e-SPPD dengan filter rentang tanggal
 - [ ] Login & peran (satpam, admin) — ditunda atas permintaan pengguna
 - [ ] Simpan data & foto ke database
