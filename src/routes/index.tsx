@@ -6,6 +6,7 @@ import { type Trip } from "@/lib/vehicle-data";
 import { useFleet } from "@/components/fleet-provider";
 import { MasterNav } from "@/components/master-nav";
 import { isCheckoutValid } from "@/lib/checkout";
+import { inRange, rangeBounds, timeRangePresets, type TimeRangePreset } from "@/lib/dashboard-filter";
 import { ServiceNav } from "@/components/service-nav";
 import { Button } from "@/components/ui/button";
 
@@ -73,11 +74,16 @@ function App() {
   const aktif = trips.filter((t) => !t.inAt);
   const selesai = trips.filter((t) => t.inAt);
 
-  // Filter dashboard per wilayah kerja
+  // Filter dashboard per wilayah kerja & rentang waktu
   const [areaFilter, setAreaFilter] = useState("Semua");
+  const [waktuPreset, setWaktuPreset] = useState<TimeRangePreset>("hari-ini");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
+  const waktuBounds = rangeBounds(waktuPreset, Date.now(), customStart, customEnd);
   const areaOf = (nopol: string) => kend.find((k) => k.nopol === nopol)?.area;
   const kendF = areaFilter === "Semua" ? kend : kend.filter((k) => k.area === areaFilter);
-  const selesaiF = areaFilter === "Semua" ? selesai : selesai.filter((t) => areaOf(t.nopol) === areaFilter);
+  const dalamRentang = (t: Trip) => inRange(t.outAt, waktuBounds);
+  const selesaiF = (areaFilter === "Semua" ? selesai : selesai.filter((t) => areaOf(t.nopol) === areaFilter)).filter(dalamRentang);
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(""), 3500); };
 
   // Check-out form
@@ -118,7 +124,7 @@ function App() {
   // Data grafik per wilayah kerja
   const grafikArea = areas.map((a) => {
     const kA = kend.filter((k) => k.area === a);
-    const tA = selesai.filter((t) => areaOf(t.nopol) === a);
+    const tA = selesai.filter((t) => areaOf(t.nopol) === a && dalamRentang(t));
     return {
       area: a,
       total: kA.length,
@@ -166,6 +172,17 @@ function App() {
                 <option value="Semua">Semua Wilayah Kerja</option>
                 {areas.map((a) => <option key={a} value={a}>{a}</option>)}
               </select>
+              <label className="text-sm font-semibold text-muted-foreground" htmlFor="filter-waktu">Rentang Waktu</label>
+              <select id="filter-waktu" aria-label="Rentang Waktu" className={`${inp} max-w-[10rem]`} value={waktuPreset} onChange={(e) => setWaktuPreset(e.target.value as TimeRangePreset)}>
+                {timeRangePresets.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+              </select>
+              {waktuPreset === "custom" && (
+                <span className="flex flex-wrap items-center gap-2">
+                  <input aria-label="Tanggal awal" type="date" className={`${inp} w-auto`} value={customStart} onChange={(e) => setCustomStart(e.target.value)} />
+                  <span className="text-sm text-muted-foreground">s/d</span>
+                  <input aria-label="Tanggal akhir" type="date" className={`${inp} w-auto`} value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} />
+                </span>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
               {[
