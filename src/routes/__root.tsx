@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { FleetProvider } from "@/components/fleet-provider";
 import { LoginGate } from "@/components/login-gate";
+import { moduleRecoveryScript } from "@/lib/module-recovery";
 
 function NotFoundComponent() {
   return (
@@ -76,6 +77,7 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  scripts: () => [{ children: moduleRecoveryScript }],
   head: () => ({
     meta: [
       { charSet: "utf-8" },
