@@ -19,5 +19,4 @@
 - Apply master edits through the fleet provider, synchronizing vehicle assignments and renamed plate trip references while retaining trip passenger/driver snapshots, so related records remain usable.
 - Prepare Excel reports from current local completed trips before the download click, using a dynamic ExcelJS import and numeric formulas with cached results, so downloads retain user activation and remain editable without implying persisted data.
 - Prepare administrative Excel reports from the same date-filtered rows shown in the list before enabling download; filter the activity/departure date inclusively so the displayed and exported records agree.
-- Keep the temporary login as a mockup-only presentation gate with no real privileged access; production permissions require authenticated server validation.
-- Register bounded stale-module recovery before the app entry through root route scripts so failed imports cannot leave the server-rendered login inert.
+- Register bounded stale-module recovery before the app entry through root route scripts so failed imports cannot leave server-rendered forms inert.
