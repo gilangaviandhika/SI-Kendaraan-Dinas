@@ -12,5 +12,6 @@
 - [x] Tambahkan User dan Bidang pada e-Overtime dan e-SPPD
 - [x] Unduh laporan perjalanan sebagai Excel
 - [x] Unduh laporan Excel e-Overtime/e-SPPD dengan filter rentang tanggal
+- [x] Filter waktu Dashboard: Hari ini, Minggu ini, Bulan ini, Custom — uji otomatis dan alur login/check-out/check-in di pratinjau
 - [ ] Login & peran (satpam, admin) — ditunda atas permintaan pengguna
 - [ ] Simpan data & foto ke database

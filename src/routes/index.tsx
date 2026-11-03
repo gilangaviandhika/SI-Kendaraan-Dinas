@@ -166,22 +166,29 @@ function App() {
 
         {menu === "Dashboard" && (
           <div className="space-y-6">
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="grid gap-3 xl:grid-cols-[minmax(0,20rem)_minmax(0,12rem)]">
+              <div className="space-y-2">
               <label className="text-sm font-semibold text-muted-foreground" htmlFor="filter-area">Wilayah Kerja</label>
-              <select id="filter-area" aria-label="Wilayah Kerja" className={`${inp} max-w-xs`} value={areaFilter} onChange={(e) => setAreaFilter(e.target.value)}>
+              <select id="filter-area" aria-label="Wilayah Kerja" className={inp} value={areaFilter} onChange={(e) => setAreaFilter(e.target.value)}>
                 <option value="Semua">Semua Wilayah Kerja</option>
                 {areas.map((a) => <option key={a} value={a}>{a}</option>)}
               </select>
+              </div>
+              <div className="space-y-2">
               <label className="text-sm font-semibold text-muted-foreground" htmlFor="filter-waktu">Rentang Waktu</label>
-              <select id="filter-waktu" aria-label="Rentang Waktu" className={`${inp} max-w-[10rem]`} value={waktuPreset} onChange={(e) => setWaktuPreset(e.target.value as TimeRangePreset)}>
+              <select id="filter-waktu" aria-label="Rentang Waktu" className={inp} value={waktuPreset} onChange={(e) => setWaktuPreset(e.target.value as TimeRangePreset)}>
                 {timeRangePresets.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
               </select>
+              </div>
               {waktuPreset === "custom" && (
-                <span className="flex flex-wrap items-center gap-2">
-                  <input aria-label="Tanggal awal" type="date" className={`${inp} w-auto`} value={customStart} onChange={(e) => setCustomStart(e.target.value)} />
-                  <span className="text-sm text-muted-foreground">s/d</span>
-                  <input aria-label="Tanggal akhir" type="date" className={`${inp} w-auto`} value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} />
-                </span>
+                <div className="grid gap-3 sm:grid-cols-2 xl:col-span-2">
+                  <label className="min-w-0 space-y-2 text-sm font-semibold text-muted-foreground">Tanggal awal
+                    <input aria-label="Tanggal awal" type="date" className={`${inp} min-w-0`} value={customStart} onChange={(e) => setCustomStart(e.target.value)} />
+                  </label>
+                  <label className="min-w-0 space-y-2 text-sm font-semibold text-muted-foreground">Tanggal akhir
+                    <input aria-label="Tanggal akhir" type="date" className={`${inp} min-w-0`} value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} />
+                  </label>
+                </div>
               )}
             </div>
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
