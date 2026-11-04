@@ -132,12 +132,14 @@ function App() {
       tersedia: kA.filter((k) => k.status === "Tersedia").length,
       trip: tA.length,
       km: tA.reduce((s, t) => s + jarak(t), 0),
+      waktu: tA.reduce((s, t) => s + durasi(t), 0),
       bbm: tA.reduce((s, t) => s + (bbm(t) ?? 0), 0),
       bbmSiap: tA.length > 0 && tA.every((t) => bbm(t) !== null),
     };
   });
   const maxKend = Math.max(1, ...grafikArea.map((g) => g.total));
   const maxKm = Math.max(1, ...grafikArea.map((g) => g.km));
+  const maxWaktu = Math.max(1, ...grafikArea.map((g) => g.waktu));
   const maxBbm = Math.max(1, ...grafikArea.map((g) => g.bbm));
 
   return (
@@ -243,7 +245,7 @@ function App() {
               </Card>
               <Card>
                 <h3 className="mb-1 font-bold">Perjalanan per Wilayah Kerja</h3>
-                <p className="mb-4 text-xs text-muted-foreground">Jumlah trip selesai, total jarak tempuh (KM), dan estimasi BBM (Ltr)</p>
+                <p className="mb-4 text-xs text-muted-foreground">Jumlah trip selesai, total jarak tempuh (KM), total waktu perjalanan, dan estimasi BBM (Ltr)</p>
                 <div className="space-y-4">
                   {grafikArea.map((g) => (
                     <div key={g.area}>
@@ -259,6 +261,12 @@ function App() {
                           <div className="h-full rounded-full bg-accent" style={{ width: `${(g.km / maxKm) * 100}%` }} />
                         </div>
                         <span className="w-14 text-right text-xs font-bold">{g.km.toLocaleString("id-ID")} km</span>
+                      </div>
+                      <div className="mb-1 flex items-center gap-2">
+                        <div className="h-3 flex-1 overflow-hidden rounded-full bg-muted">
+                          <div className="h-full rounded-full bg-warning" style={{ width: `${(g.waktu / maxWaktu) * 100}%` }} />
+                        </div>
+                        <span className="w-24 text-right text-xs font-bold">{g.waktu > 0 ? fmtDur(g.waktu) : "-"}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="h-3 flex-1 overflow-hidden rounded-full bg-muted">
