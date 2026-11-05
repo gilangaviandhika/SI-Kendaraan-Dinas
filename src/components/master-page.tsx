@@ -8,7 +8,7 @@ const titles = { kendaraan: "Kendaraan", driver: "Driver", "area-kerja": "Wilaya
 const empty = { nama: "", bidang: "", nopol: "", merk: "", driver: "", area: "", admin: "", odo: "", kml: "" };
 const inp = "w-full rounded-lg border bg-background px-3 py-2 text-sm";
 export function MasterPage({ kind }: { kind: MasterKind }) {
-  const { kend, setKend, trips, drivers, setDrivers, areas, setAreas, users, setUsers, editVehicle, editDriver, editArea, editUser } = useFleet();
+  const { kend, setKend, trips, drivers, setDrivers, areas, setAreas, users, setUsers, upsertVehicle, editDriver, editArea, editUser } = useFleet();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(empty);
   const [error, setError] = useState("");
@@ -16,14 +16,16 @@ export function MasterPage({ kind }: { kind: MasterKind }) {
   const title = titles[kind];
   const field = (label: string, key: keyof typeof empty, required = true, type = "text") => <label className="space-y-1 text-sm font-semibold"><span>{label}</span><input aria-label={label} className={inp} required={required} type={type} min={type === "number" ? (key === "kml" ? "0.01" : "0") : undefined} step={type === "number" ? "any" : undefined} value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} /></label>;
   const select = (label: string, key: "driver" | "area" | "admin", values: string[]) => <label className="space-y-1 text-sm font-semibold"><span>{label}</span><select aria-label={label} className={inp} value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })}><option value="">—</option>{values.map(v => <option key={v}>{v}</option>)}</select></label>;
-  const rows: string[][] = kind === "kendaraan" ? kend.map(k => [k.nopol, k.merk, k.driver || "—", k.area || "—", k.admin || "—", k.odo?.toLocaleString("id-ID") ?? "—", k.kml === null ? "—" : `${k.kml.toLocaleString("id-ID")} km/L`, k.status]) : kind === "driver" ? drivers.map(d => [d, kend.filter(k => k.driver === d).map(k => k.nopol).join(" · ") || "—", trips.some(t => t.driver === d && !t.inAt) ? "Sedang bertugas" : "Siap"]) : kind === "area-kerja" ? areas.map(a => [a, [...new Set(kend.filter(k => k.area === a).map(k => k.admin).filter(Boolean))].join(", ") || "—", String(kend.filter(k => k.area === a).length)]) : users.map(u => [u.nama, u.bidang || "—", kend.some(k => k.admin === u.nama) ? "Admin kendaraan" : "User"]);
-  const headers = kind === "kendaraan" ? ["No. Polisi", "Kendaraan", "Driver", "Wilayah Kerja", "Admin", "Odometer (KM)", "Efisiensi BBM (KM/L)", "Status"] : kind === "driver" ? ["Nama Driver", "Kendaraan", "Status"] : kind === "area-kerja" ? ["Wilayah Kerja", "Admin", "Kendaraan"] : ["Nama User", "Bidang", "Penugasan"];
+  const rows: string[][] = kind === "kendaraan" ? kend.map(k => [k.nopol, k.merk, k.driver || "—", k.area || "—", k.admin || "—", k.odo?.toLocaleString("id-ID") ?? "—", k.kml === null ? "—" : `${k.kml.toLocaleString("id-ID")} km/L`, k.status]) : kind === "driver" ? drivers.map(d => [d.nama, d.wilayah || "—", kend.filter(k => k.driver === d.nama).map(k => k.nopol).join(" · ") || "—", trips.some(t => t.driver === d.nama && !t.inAt) ? "Sedang bertugas" : "Siap"]) : kind === "area-kerja" ? areas.map(a => [a, [...new Set(kend.filter(k => k.area === a).map(k => k.admin).filter(Boolean))].join(", ") || "—", String(kend.filter(k => k.area === a).length)]) : users.map(u => [u.nama, u.bidang || "—", kend.some(k => k.admin === u.nama) ? "Admin kendaraan" : "User"]);
+  const headers = kind === "kendaraan" ? ["No. Polisi", "Kendaraan", "Driver", "Wilayah Kerja", "Admin", "Odometer (KM)", "Efisiensi BBM (KM/L)", "Status"] : kind === "driver" ? ["Nama Driver", "Wilayah Kerja", "Kendaraan", "Status"] : kind === "area-kerja" ? ["Wilayah Kerja", "Admin", "Kendaraan"] : ["Nama User", "Bidang", "Penugasan"];
   const startEdit = (value: string) => {
     let next = { ...empty, nama: value };
     if (kind === "kendaraan") {
       const vehicle = kend.find(k => k.nopol === value);
       if (!vehicle) return;
       next = { ...empty, nopol: vehicle.nopol, merk: vehicle.merk, driver: vehicle.driver, area: vehicle.area, admin: vehicle.admin, odo: vehicle.odo === null ? "" : String(vehicle.odo), kml: vehicle.kml === null ? "" : String(vehicle.kml) };
+    } else if (kind === "driver") {
+      next.area = drivers.find((d) => d.nama === value)?.wilayah ?? "";
     } else if (kind === "user") {
       next.bidang = users.find(u => u.nama === value)?.bidang ?? "";
     }
