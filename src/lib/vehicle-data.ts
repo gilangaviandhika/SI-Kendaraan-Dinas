@@ -10,8 +10,9 @@ export type Trip = {
   user?: string; bidang?: string;
 };
 
-// Source: DATA_DRIVER_1.xlsx, DRIVER sheet. Odometer and efficiency were not supplied.
-export const kendaraan0: Kendaraan[] = [
+// Source: DATA_DRIVER_1.xlsx, DRIVER sheet. Odometer was not supplied.
+// Efisiensi BBM (KM/L) default per merk sesuai instruksi pengguna.
+const kendaraanRaw: Kendaraan[] = [
   {
     "nopol": "B 2240 PYF",
     "merk": "INNOVA ZENIQ",
@@ -343,6 +344,16 @@ export const kendaraan0: Kendaraan[] = [
     "status": "Tersedia"
   }
 ];
+const defaultKmlByMerk: Record<string, number | null> = {
+  "INNOVA ZENIQ": 18,
+  "TOYOTA HIACE": 9,
+  "MITSUBISHI XPANDER": 10,
+  "MITSUBISHI L300": 9,
+  "TOYOTA HILUX": 10,
+  "ISUZU ELF": 7,
+  "TRUCK CRANE": 3,
+};
+export const kendaraan0: Kendaraan[] = kendaraanRaw.map((k) => ({ ...k, kml: defaultKmlByMerk[k.merk] ?? null }));
 export const drivers0 = [...new Set(kendaraan0.map((k) => k.driver))];
 export const areas0 = [...new Set(kendaraan0.map((k) => k.area))];
 export const trips0: Trip[] = [];
