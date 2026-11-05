@@ -28,6 +28,6 @@ describe("DATA_DRIVER_1 master import", () => {
     expect(byMerk.get("TOYOTA HILUX")).toBe(10);
     expect(byMerk.get("ISUZU ELF")).toBe(7);
     expect(byMerk.get("TRUCK CRANE")).toBe(3);
-    expect(byMerk.get("ISUZU D-MAX")).toBeNull();
+    expect(byMerk.get("ISUZU D-MAX")).toBe(9);
   });
 });
