@@ -8,13 +8,18 @@ function useFleetState() {
   const [drivers, setDrivers] = useState<Driver[]>(drivers0);
   const [areas, setAreas] = useState(areas0);
   const [users, setUsers] = useState<MasterUser[]>(() => [...new Set(kendaraan0.map(k => k.admin))].map(nama => ({ nama, bidang: "" })));
-  const editVehicle = (original: string, vehicle: Kendaraan) => {
-    setKend(old => old.map(k => k.nopol === original ? vehicle : k));
-    setTrips(old => old.map(t => t.nopol === original ? { ...t, nopol: vehicle.nopol } : t));
+  // original === null menambah kendaraan; selain itu mengedit baris bernopol `original`.
+  // Wilayah kerja driver selalu disinkronkan dari kendaraan yang ditugaskan kepadanya
+  // agar master driver, check-out, dan check-in tetap terhubung.
+  const upsertVehicle = (original: string | null, vehicle: Kendaraan) => {
+    const next = original !== null && kend.some((k) => k.nopol === original) ? kend.map((k) => (k.nopol === original ? vehicle : k)) : [...kend, vehicle];
+    setKend(next);
+    if (original !== null) setTrips((old) => old.map((t) => (t.nopol === original ? { ...t, nopol: vehicle.nopol } : t)));
+    setDrivers((ds) => ds.map((d) => ({ ...d, wilayah: driverWilayah(d.nama, next) ?? d.wilayah })));
   };
-  const editDriver = (original: string, name: string) => {
-    setDrivers(old => old.map(d => d === original ? name : d));
-    setKend(old => old.map(k => k.driver === original ? { ...k, driver: name } : k));
+  const editDriver = (original: string, driver: Driver) => {
+    setDrivers((old) => old.map((d) => (d.nama === original ? driver : d)));
+    setKend((old) => old.map((k) => (k.driver === original ? { ...k, driver: driver.nama } : k)));
   };
   const editArea = (original: string, name: string) => {
     setAreas(old => old.map(a => a === original ? name : a));
