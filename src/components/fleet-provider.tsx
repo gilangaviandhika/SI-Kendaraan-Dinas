@@ -1,20 +1,25 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
-import { kendaraan0, trips0, drivers0, areas0, type Kendaraan } from "@/lib/vehicle-data";
+import { kendaraan0, trips0, drivers0, areas0, driverWilayah, type Driver, type Kendaraan } from "@/lib/vehicle-data";
 
 export type MasterUser = { nama: string; bidang: string };
 function useFleetState() {
   const [kend, setKend] = useState(kendaraan0);
   const [trips, setTrips] = useState(trips0);
-  const [drivers, setDrivers] = useState(drivers0);
+  const [drivers, setDrivers] = useState<Driver[]>(drivers0);
   const [areas, setAreas] = useState(areas0);
   const [users, setUsers] = useState<MasterUser[]>(() => [...new Set(kendaraan0.map(k => k.admin))].map(nama => ({ nama, bidang: "" })));
-  const editVehicle = (original: string, vehicle: Kendaraan) => {
-    setKend(old => old.map(k => k.nopol === original ? vehicle : k));
-    setTrips(old => old.map(t => t.nopol === original ? { ...t, nopol: vehicle.nopol } : t));
+  // original === null menambah kendaraan; selain itu mengedit baris bernopol `original`.
+  // Wilayah kerja driver selalu disinkronkan dari kendaraan yang ditugaskan kepadanya
+  // agar master driver, check-out, dan check-in tetap terhubung.
+  const upsertVehicle = (original: string | null, vehicle: Kendaraan) => {
+    const next = original !== null && kend.some((k) => k.nopol === original) ? kend.map((k) => (k.nopol === original ? vehicle : k)) : [...kend, vehicle];
+    setKend(next);
+    if (original !== null) setTrips((old) => old.map((t) => (t.nopol === original ? { ...t, nopol: vehicle.nopol } : t)));
+    setDrivers((ds) => ds.map((d) => ({ ...d, wilayah: driverWilayah(d.nama, next) ?? d.wilayah })));
   };
-  const editDriver = (original: string, name: string) => {
-    setDrivers(old => old.map(d => d === original ? name : d));
-    setKend(old => old.map(k => k.driver === original ? { ...k, driver: name } : k));
+  const editDriver = (original: string, driver: Driver) => {
+    setDrivers((old) => old.map((d) => (d.nama === original ? driver : d)));
+    setKend((old) => old.map((k) => (k.driver === original ? { ...k, driver: driver.nama } : k)));
   };
   const editArea = (original: string, name: string) => {
     setAreas(old => old.map(a => a === original ? name : a));
@@ -24,7 +29,7 @@ function useFleetState() {
     setUsers(old => old.map(u => u.nama === original ? user : u));
     setKend(old => old.map(k => k.admin === original ? { ...k, admin: user.nama } : k));
   };
-  return { kend, setKend, trips, setTrips, drivers, setDrivers, areas, setAreas, users, setUsers, editVehicle, editDriver, editArea, editUser };
+  return { kend, setKend, trips, setTrips, drivers, setDrivers, areas, setAreas, users, setUsers, upsertVehicle, editDriver, editArea, editUser };
 }
 const FleetContext = createContext<ReturnType<typeof useFleetState> | null>(null);
 export function FleetProvider({ children }: { children: ReactNode }) {

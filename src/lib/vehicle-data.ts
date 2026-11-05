@@ -355,6 +355,13 @@ const defaultKmlByMerk: Record<string, number | null> = {
   "TRUCK CRANE": 3,
 };
 export const kendaraan0: Kendaraan[] = kendaraanRaw.map((k) => ({ ...k, kml: defaultKmlByMerk[k.merk] ?? null }));
-export const drivers0 = [...new Set(kendaraan0.map((k) => k.driver))];
+export type Driver = { nama: string; wilayah: string };
+// Wilayah kerja driver diturunkan dari kendaraan yang ditugaskan kepadanya,
+// sehingga ikut terhubung dengan alur check-out/check-in.
+export const driverWilayah = (nama: string, kendaraan: Kendaraan[]): string | null => {
+  const assigned = kendaraan.find((k) => k.driver === nama);
+  return assigned ? assigned.area : null;
+};
+export const drivers0: Driver[] = [...new Set(kendaraan0.map((k) => k.driver))].map((nama) => ({ nama, wilayah: driverWilayah(nama, kendaraan0) ?? "" }));
 export const areas0 = [...new Set(kendaraan0.map((k) => k.area))];
 export const trips0: Trip[] = [];

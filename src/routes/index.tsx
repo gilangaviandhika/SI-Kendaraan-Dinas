@@ -292,7 +292,7 @@ function App() {
               </select>
               <select aria-label="Driver" className={inp} value={co.driver} onChange={(e) => setCo({ ...co, driver: e.target.value })}>
                 <option value="">Pilih driver…</option>
-                {drivers.filter((d) => !aktif.some((t) => t.driver === d)).map((d) => <option key={d}>{d}</option>)}
+                {drivers.filter((d) => !aktif.some((t) => t.driver === d.nama) && (!kSel || !d.wilayah || d.wilayah === kSel.area)).map((d) => <option key={d.nama} value={d.nama}>{d.nama}{d.wilayah ? ` — ${d.wilayah}` : ""}</option>)}
               </select>
               <label className="space-y-1 text-sm font-semibold"><span>User</span><input className={inp} list="checkout-users" placeholder="Nama pegawai" value={co.user} onChange={(e) => { const user = users.find(u => u.nama === e.target.value); setCo({ ...co, user: e.target.value, bidang: user?.bidang || co.bidang }); }} /></label>
               <datalist id="checkout-users">{users.map(u => <option key={u.nama} value={u.nama} />)}</datalist>
