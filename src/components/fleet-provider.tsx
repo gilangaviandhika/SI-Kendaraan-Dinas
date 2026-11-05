@@ -1,11 +1,11 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
-import { kendaraan0, trips0, drivers0, areas0, type Kendaraan } from "@/lib/vehicle-data";
+import { kendaraan0, trips0, drivers0, areas0, driverWilayah, type Driver, type Kendaraan } from "@/lib/vehicle-data";
 
 export type MasterUser = { nama: string; bidang: string };
 function useFleetState() {
   const [kend, setKend] = useState(kendaraan0);
   const [trips, setTrips] = useState(trips0);
-  const [drivers, setDrivers] = useState(drivers0);
+  const [drivers, setDrivers] = useState<Driver[]>(drivers0);
   const [areas, setAreas] = useState(areas0);
   const [users, setUsers] = useState<MasterUser[]>(() => [...new Set(kendaraan0.map(k => k.admin))].map(nama => ({ nama, bidang: "" })));
   const editVehicle = (original: string, vehicle: Kendaraan) => {
@@ -24,7 +24,7 @@ function useFleetState() {
     setUsers(old => old.map(u => u.nama === original ? user : u));
     setKend(old => old.map(k => k.admin === original ? { ...k, admin: user.nama } : k));
   };
-  return { kend, setKend, trips, setTrips, drivers, setDrivers, areas, setAreas, users, setUsers, editVehicle, editDriver, editArea, editUser };
+  return { kend, setKend, trips, setTrips, drivers, setDrivers, areas, setAreas, users, setUsers, upsertVehicle, editDriver, editArea, editUser };
 }
 const FleetContext = createContext<ReturnType<typeof useFleetState> | null>(null);
 export function FleetProvider({ children }: { children: ReactNode }) {
