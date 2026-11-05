@@ -350,6 +350,7 @@ const defaultKmlByMerk: Record<string, number | null> = {
   "MITSUBISHI XPANDER": 10,
   "MITSUBISHI L300": 9,
   "TOYOTA HILUX": 10,
+  "ISUZU D-MAX": 9,
   "ISUZU ELF": 7,
   "TRUCK CRANE": 3,
 };
