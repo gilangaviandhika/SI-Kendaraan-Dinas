@@ -18,7 +18,16 @@ describe("DATA_DRIVER_1 master import", () => {
       ["UPT BANDUNG", 14], ["ULTG BANDUNG BARAT", 7], ["ULTG BANDUNG SELATAN", 6], ["ULTG BANDUNG TIMUR", 6],
     ]);
   });
-  it("does not invent missing odometer or fuel-efficiency values", () => {
-    expect(kendaraan0.every((k) => k.odo === null && k.kml === null)).toBe(true);
+  it("keeps odometer empty and applies BBM efficiency defaults per merk", () => {
+    expect(kendaraan0.every((k) => k.odo === null)).toBe(true);
+    const byMerk = new Map(kendaraan0.map((k) => [k.merk, k.kml]));
+    expect(byMerk.get("INNOVA ZENIQ")).toBe(18);
+    expect(byMerk.get("TOYOTA HIACE")).toBe(9);
+    expect(byMerk.get("MITSUBISHI XPANDER")).toBe(10);
+    expect(byMerk.get("MITSUBISHI L300")).toBe(9);
+    expect(byMerk.get("TOYOTA HILUX")).toBe(10);
+    expect(byMerk.get("ISUZU ELF")).toBe(7);
+    expect(byMerk.get("TRUCK CRANE")).toBe(3);
+    expect(byMerk.get("ISUZU D-MAX")).toBeNull();
   });
 });

@@ -10,8 +10,9 @@ export type Trip = {
   user?: string; bidang?: string;
 };
 
-// Source: DATA_DRIVER_1.xlsx, DRIVER sheet. Odometer and efficiency were not supplied.
-export const kendaraan0: Kendaraan[] = [
+// Source: DATA_DRIVER_1.xlsx, DRIVER sheet. Odometer was not supplied.
+// Efisiensi BBM (KM/L) default per merk sesuai instruksi pengguna.
+const kendaraanRaw: Kendaraan[] = [
   {
     "nopol": "B 2240 PYF",
     "merk": "INNOVA ZENIQ",
