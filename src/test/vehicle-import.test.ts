@@ -18,6 +18,12 @@ describe("DATA_DRIVER_1 master import", () => {
       ["UPT BANDUNG", 14], ["ULTG BANDUNG BARAT", 7], ["ULTG BANDUNG SELATAN", 6], ["ULTG BANDUNG TIMUR", 6],
     ]);
   });
+  it("derives each driver's wilayah kerja from their assigned vehicle", () => {
+    expect(drivers0.every((d) => d.wilayah.length > 0)).toBe(true);
+    expect(drivers0.find((d) => d.nama === "EGI RIFKI TRIADI")?.wilayah).toBe("UPT BANDUNG");
+    expect(drivers0.find((d) => d.nama === "DADAN WARDANI")?.wilayah).toBe("UPT BANDUNG");
+    expect(drivers0.find((d) => d.nama === "BUDI MAHMUDIN")?.wilayah).toBe("ULTG BANDUNG BARAT");
+  });
   it("keeps odometer empty and applies BBM efficiency defaults per merk", () => {
     expect(kendaraan0.every((k) => k.odo === null)).toBe(true);
     const byMerk = new Map(kendaraan0.map((k) => [k.merk, k.kml]));
