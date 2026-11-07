@@ -393,7 +393,7 @@ function App() {
                   <td className="text-right font-semibold">{jarak(t).toLocaleString("id-ID")} KM</td>
                    <td className="text-right">{bbm(t) === null ? "Belum tersedia" : `${bbm(t)?.toFixed(1)} L`}</td>
                   <td>{t.kondisi}</td>
-                  <td><div className="flex gap-1">{[t.fotoOdoOut, ...t.fotoOut, ...(t.fotoOdoIn ? [t.fotoOdoIn] : []), ...(t.fotoIn ?? [])].map((f, i) => <img key={i} src={f} alt="Foto odometer atau kendaraan" className="h-8 w-8 rounded object-cover" />)}
+                  <td><div className="flex gap-1">{[...(t.fotoOdoOut ? [t.fotoOdoOut] : []), ...t.fotoOut, ...(t.fotoOdoIn ? [t.fotoOdoIn] : []), ...(t.fotoIn ?? [])].map((f, i) => <img key={i} src={f} alt="Foto odometer atau kendaraan" className="h-8 w-8 rounded object-cover" />)}
                     {t.fotoOut.length === 0 && <span className="text-xs text-muted-foreground">contoh</span>}</div></td>
                 </tr>
               ))}</tbody>
