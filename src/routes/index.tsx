@@ -5,7 +5,7 @@ import { createReportBlob, deliverReport } from "@/lib/report-export";
 import { type Trip } from "@/lib/vehicle-data";
 import { useFleet } from "@/components/fleet-provider";
 import { MasterNav } from "@/components/master-nav";
-import { isCheckoutValid } from "@/lib/checkout";
+import { isCheckoutValid, isCheckinValid } from "@/lib/checkout";
 import { inRange, rangeBounds, timeRangePresets, type TimeRangePreset } from "@/lib/dashboard-filter";
 import { ServiceNav } from "@/components/service-nav";
 import { Button } from "@/components/ui/button";
@@ -87,27 +87,27 @@ function App() {
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(""), 3500); };
 
   // Check-out form
-  const [co, setCo] = useState({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", satpam: SATPAM0, odo: "", foto: ["", ""] });
+  const [co, setCo] = useState({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""] });
   const kSel = kend.find((k) => k.nopol === co.nopol);
   const coValid = isCheckoutValid(co, kSel);
   const submitOut = () => {
     if (!coValid) return;
-    setTrips((t) => [{ id: Date.now(), nopol: co.nopol, driver: co.driver, tujuan: co.tujuan, user: co.user.trim(), bidang: co.bidang.trim(), satpamOut: co.satpam, outAt: Date.now(), odoOut: Number(co.odo), fotoOut: co.foto }, ...t]);
+    setTrips((t) => [{ id: Date.now(), nopol: co.nopol, driver: co.driver, tujuan: co.tujuan, user: co.user.trim(), bidang: co.bidang.trim(), satpamOut: co.satpam, outAt: Date.now(), odoOut: Number(co.odo), fotoOdoOut: co.fotoOdo, fotoOut: co.foto }, ...t]);
     setKend((ks) => ks.map((k) => (k.nopol === co.nopol ? { ...k, status: "Digunakan" } : k)));
-    setCo({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", satpam: SATPAM0, odo: "", foto: ["", ""] });
+    setCo({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""] });
     flash("Check-out tercatat. Kendaraan kini berstatus Digunakan.");
     setMenu("Dalam Perjalanan");
   };
 
   // Check-in form
-  const [ci, setCi] = useState({ id: 0, satpam: SATPAM0, odo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan", user: "", bidang: "" });
+  const [ci, setCi] = useState({ id: 0, satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan", user: "", bidang: "" });
   const tSel = trips.find((t) => t.id === ci.id);
-  const ciValid = tSel && Number(ci.odo) > tSel.odoOut && ci.foto.every(Boolean) && !!ci.user.trim() && !!ci.bidang.trim();
+  const ciValid = isCheckinValid(ci, tSel);
   const submitIn = () => {
     if (!ciValid || !tSel) return;
-    setTrips((t) => t.map((x) => (x.id === ci.id ? { ...x, satpamIn: ci.satpam, inAt: Date.now(), odoIn: Number(ci.odo), fotoIn: ci.foto, kondisi: ci.kondisi, user: ci.user.trim(), bidang: ci.bidang.trim() } : x)));
+    setTrips((t) => t.map((x) => (x.id === ci.id ? { ...x, satpamIn: ci.satpam, inAt: Date.now(), odoIn: Number(ci.odo), fotoOdoIn: ci.fotoOdo, fotoIn: ci.foto, kondisi: ci.kondisi, user: ci.user.trim(), bidang: ci.bidang.trim() } : x)));
     setKend((ks) => ks.map((k) => (k.nopol === tSel.nopol ? { ...k, status: "Tersedia", odo: Number(ci.odo) } : k)));
-    setCi({ id: 0, satpam: SATPAM0, odo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan", user: "", bidang: "" });
+    setCi({ id: 0, satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan", user: "", bidang: "" });
     flash("Check-in tercatat. Jarak & BBM dihitung otomatis, kendaraan kembali Tersedia.");
     setMenu("Laporan");
   };
@@ -284,7 +284,7 @@ function App() {
 
         {menu === "Check-Out" && (
           <Card className="max-w-3xl space-y-5">
-            <Steps items={["Data perjalanan", "Odometer", "Foto kendaraan", "Kirim"]} active={!co.nopol || !co.driver ? 0 : !co.odo ? 1 : !co.foto.every(Boolean) ? 2 : 3} />
+            <Steps items={["Data perjalanan", "Odometer", "Foto odometer", "Foto kendaraan", "Kirim"]} active={!co.nopol || !co.driver ? 0 : !co.odo ? 1 : !co.fotoOdo ? 2 : !co.foto.every(Boolean) ? 3 : 4} />
             <div className="grid gap-3 md:grid-cols-2">
               <select aria-label="Kendaraan tersedia" className={inp} value={co.nopol} onChange={(e) => setCo({ ...co, nopol: e.target.value, odo: String(kend.find((k) => k.nopol === e.target.value)?.odo ?? "") })}>
                 <option value="">Pilih kendaraan tersedia…</option>
@@ -304,6 +304,10 @@ function App() {
               <p className="mb-1 text-sm font-bold">🧭 Odometer saat berangkat (KM)</p>
               <input aria-label="Odometer saat berangkat (KM)" type="number" className={inp} value={co.odo} onChange={(e) => setCo({ ...co, odo: e.target.value })} />
               {kSel && <p className="mt-1 text-xs text-muted-foreground">Odometer terakhir tercatat: {kSel.odo === null ? "Belum tersedia" : `${kSel.odo.toLocaleString("id-ID")} KM`}</p>}
+            </div>
+            <div>
+              <p className="mb-2 text-sm font-bold">Foto odometer saat berangkat</p>
+              <div className="max-w-md"><Foto label="Foto odometer" value={co.fotoOdo} onChange={(u) => setCo({ ...co, fotoOdo: u })} /></div>
             </div>
             <div>
               <p className="mb-2 text-sm font-bold">Foto kendaraan</p>
@@ -335,7 +339,7 @@ function App() {
 
         {menu === "Check-In" && (
           <Card className="max-w-3xl space-y-5">
-            <Steps items={["Pilih perjalanan", "Odometer akhir", "Foto kondisi", "Kirim"]} active={!ci.id ? 0 : !ci.odo ? 1 : !ci.foto.every(Boolean) ? 2 : 3} />
+            <Steps items={["Pilih perjalanan", "Odometer akhir", "Foto odometer", "Foto kondisi", "Kirim"]} active={!ci.id ? 0 : !ci.odo ? 1 : !ci.fotoOdo ? 2 : !ci.foto.every(Boolean) ? 3 : 4} />
             <div className="grid gap-3 md:grid-cols-2">
               <select className={inp} value={ci.id} onChange={(e) => { const trip = aktif.find(t => t.id === Number(e.target.value)); setCi({ ...ci, id: Number(e.target.value), user: trip?.user ?? "", bidang: trip?.bidang ?? "" }); }}>
                 <option value={0}>Pilih kendaraan yang kembali…</option>
@@ -350,6 +354,10 @@ function App() {
               <input type="number" className={inp} value={ci.odo} onChange={(e) => setCi({ ...ci, odo: e.target.value })} />
               {tSel && <p className="mt-1 text-xs text-muted-foreground">Odometer saat berangkat: {tSel.odoOut.toLocaleString("id-ID")} KM
                 {Number(ci.odo) > tSel.odoOut && <> · jarak tempuh <b>{(Number(ci.odo) - tSel.odoOut).toLocaleString("id-ID")} KM</b></>}</p>}
+            </div>
+            <div>
+              <p className="mb-2 text-sm font-bold">Foto odometer saat kembali</p>
+              <div className="max-w-md"><Foto label="Foto odometer" value={ci.fotoOdo} onChange={(u) => setCi({ ...ci, fotoOdo: u })} /></div>
             </div>
             <div>
               <p className="mb-2 text-sm font-bold">Foto kondisi kendaraan</p>
@@ -385,7 +393,7 @@ function App() {
                   <td className="text-right font-semibold">{jarak(t).toLocaleString("id-ID")} KM</td>
                    <td className="text-right">{bbm(t) === null ? "Belum tersedia" : `${bbm(t)?.toFixed(1)} L`}</td>
                   <td>{t.kondisi}</td>
-                  <td><div className="flex gap-1">{[...t.fotoOut, ...(t.fotoIn ?? [])].map((f, i) => <img key={i} src={f} alt="" className="h-8 w-8 rounded object-cover" />)}
+                  <td><div className="flex gap-1">{[t.fotoOdoOut, ...t.fotoOut, ...(t.fotoOdoIn ? [t.fotoOdoIn] : []), ...(t.fotoIn ?? [])].map((f, i) => <img key={i} src={f} alt="Foto odometer atau kendaraan" className="h-8 w-8 rounded object-cover" />)}
                     {t.fotoOut.length === 0 && <span className="text-xs text-muted-foreground">contoh</span>}</div></td>
                 </tr>
               ))}</tbody>
