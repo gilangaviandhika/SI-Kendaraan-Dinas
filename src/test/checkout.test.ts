@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { isCheckoutValid, type CheckoutForm } from "@/lib/checkout";
-import { kendaraan0 } from "@/lib/vehicle-data";
+import { isCheckoutValid, isCheckinValid, type CheckoutForm } from "@/lib/checkout";
+import { kendaraan0, type Trip } from "@/lib/vehicle-data";
 
-const form: CheckoutForm = { nopol: "B 2240 PYF", driver: "EGI RIFKI TRIADI", tujuan: "Bandung", user: "Budi", bidang: "Bidang Umum", satpam: "Satpam", odo: "100", foto: ["depan", "belakang"] };
+const form: CheckoutForm = { nopol: "B 2240 PYF", driver: "EGI RIFKI TRIADI", tujuan: "Bandung", user: "Budi", bidang: "Bidang Umum", satpam: "Satpam", odo: "100", fotoOdo: "odometer", foto: ["depan", "belakang"] };
 describe("Identitas pengguna saat Check-Out", () => {
   it("requires User before checkout", () => {
     expect(isCheckoutValid(form, kendaraan0[0])).toBe(true);
@@ -17,5 +17,18 @@ describe("Identitas pengguna saat Check-Out", () => {
     expect(isCheckoutValid({ ...form, foto: ["depan"] }, kendaraan0[0])).toBe(false);
     expect(isCheckoutValid({ ...form, foto: ["depan", "samping", "belakang"] }, kendaraan0[0])).toBe(false);
     expect(isCheckoutValid({ ...form, foto: ["depan", ""] }, kendaraan0[0])).toBe(false);
+  });
+  it("requires a separate odometer photo", () => {
+    expect(isCheckoutValid(form, kendaraan0[0])).toBe(true);
+    expect(isCheckoutValid({ ...form, fotoOdo: "" }, kendaraan0[0])).toBe(false);
+  });
+});
+
+const trip: Trip = { id: 1, nopol: "B 2240 PYF", driver: "EGI RIFKI TRIADI", tujuan: "Bandung", satpamOut: "Satpam", outAt: 1, odoOut: 100, fotoOdoOut: "odometer-out", fotoOut: ["depan", "belakang"] };
+const checkinForm = { odo: "150", fotoOdo: "odometer-in", foto: ["depan", "belakang"], user: "Budi", bidang: "Bidang Umum" };
+describe("Foto odometer saat Check-In", () => {
+  it("requires a separate odometer photo before check-in", () => {
+    expect(isCheckinValid(checkinForm, trip)).toBe(true);
+    expect(isCheckinValid({ ...checkinForm, fotoOdo: "" }, trip)).toBe(false);
   });
 });

@@ -13,6 +13,7 @@
 - [x] Unduh laporan perjalanan sebagai Excel
 - [x] Unduh laporan Excel e-Overtime/e-SPPD dengan filter rentang tanggal
 - [x] Filter waktu Dashboard: Hari ini, Minggu ini, Bulan ini, Custom — uji otomatis dan alur login/check-out/check-in di pratinjau
+- [x] Tambahkan foto odometer terpisah pada Check-Out dan Check-In
 - [x] Login sementara admin/admin dilepas atas permintaan pengguna
 - [ ] Login & peran (satpam, admin) — ditunda atas permintaan pengguna
 - [ ] Simpan data & foto ke database

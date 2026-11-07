@@ -5,8 +5,8 @@ export type Kendaraan = {
 };
 export type Trip = {
   id: number; nopol: string; driver: string; tujuan: string; satpamOut: string;
-  outAt: number; odoOut: number; fotoOut: string[];
-  satpamIn?: string; inAt?: number; odoIn?: number; fotoIn?: string[]; kondisi?: string;
+  outAt: number; odoOut: number; fotoOdoOut?: string; fotoOut: string[];
+  satpamIn?: string; inAt?: number; odoIn?: number; fotoOdoIn?: string; fotoIn?: string[]; kondisi?: string;
   user?: string; bidang?: string;
 };
 
