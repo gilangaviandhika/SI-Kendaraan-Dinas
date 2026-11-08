@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { inRange, rangeBounds } from "@/lib/dashboard-filter";
+import { dashboardTripRows, inRange, rangeBounds } from "@/lib/dashboard-filter";
 
 const DAY = 86_400_000;
 // Senin, 2 November 2026, 15:30 waktu lokal.
@@ -34,5 +34,37 @@ describe("Filter rentang waktu Dashboard", () => {
   it("Custom tanpa tanggal tidak membatasi apa pun", () => {
     const b = rangeBounds("custom", now);
     expect(inRange(at(2020, 1, 1), b)).toBe(true);
+  });
+});
+
+describe("Rincian trip Dashboard", () => {
+  const bounds = rangeBounds("hari-ini", now);
+  const trips = [
+    { id: 1, nopol: "A", outAt: at(2026, 11, 2, 9), inAt: at(2026, 11, 2, 10) },
+    { id: 2, nopol: "B", outAt: at(2026, 11, 2, 8) },
+    { id: 3, nopol: "A", outAt: at(2026, 11, 2, 11), inAt: at(2026, 11, 2, 12) },
+    { id: 4, nopol: "B", outAt: at(2026, 11, 1, 8) },
+  ];
+  const areaOf = (nopol: string) => nopol === "A" ? "UPT BANDUNG" : "ULTG BANDUNG BARAT";
+
+  it("menyaring trip selesai berdasarkan tanggal dan wilayah, tetapi tetap menampilkan trip aktif", () => {
+    const rows = dashboardTripRows(trips, areaOf, "UPT BANDUNG", bounds);
+    expect(rows.map((trip) => trip.id)).toEqual([3, 1]);
+    expect(dashboardTripRows(trips, areaOf, "ULTG BANDUNG BARAT", bounds).map((trip) => trip.id)).toEqual([2]);
+  });
+
+  it("mengurutkan trip terbaru lebih dulu", () => {
+    expect(dashboardTripRows(trips, areaOf, "Semua", bounds).map((trip) => trip.id)).toEqual([3, 1, 2]);
+  });
+
+  it("membatasi tampilan ke enam perjalanan terbaru tanpa mengubah urutan sumber", () => {
+    const manyTrips = Array.from({ length: 8 }, (_, index) => ({
+      id: index + 1,
+      nopol: "A",
+      outAt: at(2026, 11, 2, index + 1),
+    }));
+    const rows = dashboardTripRows(manyTrips, areaOf, "Semua", bounds);
+    expect(rows.map((trip) => trip.id)).toEqual([8, 7, 6, 5, 4, 3]);
+    expect(manyTrips.map((trip) => trip.id)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
   });
 });

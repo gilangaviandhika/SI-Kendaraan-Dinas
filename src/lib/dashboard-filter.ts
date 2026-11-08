@@ -52,3 +52,19 @@ export function rangeBounds(
 export function inRange(ms: number | undefined, bounds: { start: number; end: number }): boolean {
   return ms !== undefined && ms >= bounds.start && ms < bounds.end;
 }
+
+export function dashboardTripRows<T extends { nopol: string; outAt: number; inAt?: number }>(
+  trips: readonly T[],
+  areaOf: (nopol: string) => string | undefined,
+  selectedArea: string,
+  bounds: { start: number; end: number },
+  limit = 6,
+): T[] {
+  return trips
+    .filter((trip) =>
+      (selectedArea === "Semua" || areaOf(trip.nopol) === selectedArea) &&
+      inRange(trip.outAt, bounds),
+    )
+    .sort((a, b) => b.outAt - a.outAt)
+    .slice(0, limit);
+}
