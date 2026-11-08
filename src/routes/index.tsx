@@ -6,7 +6,7 @@ import { type Trip } from "@/lib/vehicle-data";
 import { useFleet } from "@/components/fleet-provider";
 import { MasterNav } from "@/components/master-nav";
 import { isCheckoutValid, isCheckinValid } from "@/lib/checkout";
-import { inRange, rangeBounds, timeRangePresets, type TimeRangePreset } from "@/lib/dashboard-filter";
+import { dashboardTripRows, inRange, rangeBounds, timeRangePresets, type TimeRangePreset } from "@/lib/dashboard-filter";
 import { ServiceNav } from "@/components/service-nav";
 import { Button } from "@/components/ui/button";
 
@@ -84,6 +84,7 @@ function App() {
   const kendF = areaFilter === "Semua" ? kend : kend.filter((k) => k.area === areaFilter);
   const dalamRentang = (t: Trip) => inRange(t.outAt, waktuBounds);
   const selesaiF = (areaFilter === "Semua" ? selesai : selesai.filter((t) => areaOf(t.nopol) === areaFilter)).filter(dalamRentang);
+  const tripTerbaru = dashboardTripRows(trips, areaOf, areaFilter, waktuBounds);
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(""), 3500); };
 
   // Check-out form
@@ -279,6 +280,45 @@ function App() {
                 </div>
               </Card>
             </div>
+            <Card className="overflow-x-auto">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <h3 className="font-bold">Trip Terbaru</h3>
+                <span className="text-xs text-muted-foreground">{tripTerbaru.length} perjalanan</span>
+              </div>
+              <table aria-label="Trip terbaru" className="w-full min-w-[42rem] text-sm">
+                <thead className="text-left text-muted-foreground">
+                  <tr>
+                    <th className="py-2 pr-4">Tujuan</th>
+                    <th className="py-2 pr-4">Kendaraan</th>
+                    <th className="py-2 pr-4">Driver</th>
+                    <th className="py-2 pr-4">Waktu Berangkat</th>
+                    <th className="py-2">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tripTerbaru.map((trip) => (
+                    <tr key={trip.id} className="border-t align-top">
+                      <td className="py-3 pr-4 font-medium">{trip.tujuan || "—"}</td>
+                      <td className="py-3 pr-4 font-semibold">{trip.nopol}</td>
+                      <td className="py-3 pr-4">{trip.driver}</td>
+                      <td className="py-3 pr-4">{fmtWaktu(trip.outAt)}</td>
+                      <td className="py-3">
+                        <span className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${trip.inAt === undefined ? "bg-warning/20 text-foreground" : "bg-success/15 text-success"}`}>
+                          {trip.inAt === undefined ? "Dalam Perjalanan" : "Selesai"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {tripTerbaru.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                        Belum ada perjalanan pada rentang waktu ini.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </Card>
           </div>
         )}
 
