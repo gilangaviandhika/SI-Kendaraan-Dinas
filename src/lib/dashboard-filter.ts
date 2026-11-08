@@ -63,7 +63,7 @@ export function dashboardTripRows<T extends { nopol: string; outAt: number; inAt
   return trips
     .filter((trip) =>
       (selectedArea === "Semua" || areaOf(trip.nopol) === selectedArea) &&
-      (trip.inAt === undefined || inRange(trip.outAt, bounds)),
+      inRange(trip.outAt, bounds),
     )
     .sort((a, b) => b.outAt - a.outAt)
     .slice(0, limit);

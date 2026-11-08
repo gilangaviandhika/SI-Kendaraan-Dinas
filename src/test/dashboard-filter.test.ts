@@ -41,8 +41,9 @@ describe("Rincian trip Dashboard", () => {
   const bounds = rangeBounds("hari-ini", now);
   const trips = [
     { id: 1, nopol: "A", outAt: at(2026, 11, 2, 9), inAt: at(2026, 11, 2, 10) },
-    { id: 2, nopol: "B", outAt: at(2026, 11, 1, 8) },
+    { id: 2, nopol: "B", outAt: at(2026, 11, 2, 8) },
     { id: 3, nopol: "A", outAt: at(2026, 11, 2, 11), inAt: at(2026, 11, 2, 12) },
+    { id: 4, nopol: "B", outAt: at(2026, 11, 1, 8) },
   ];
   const areaOf = (nopol: string) => nopol === "A" ? "UPT BANDUNG" : "ULTG BANDUNG BARAT";
 
@@ -53,6 +54,17 @@ describe("Rincian trip Dashboard", () => {
   });
 
   it("mengurutkan trip terbaru lebih dulu", () => {
-    expect(dashboardTripRows(trips, areaOf, "Semua", bounds).map((trip) => trip.id)).toEqual([2, 3, 1]);
+    expect(dashboardTripRows(trips, areaOf, "Semua", bounds).map((trip) => trip.id)).toEqual([3, 1, 2]);
+  });
+
+  it("membatasi tampilan ke enam perjalanan terbaru tanpa mengubah urutan sumber", () => {
+    const manyTrips = Array.from({ length: 8 }, (_, index) => ({
+      id: index + 1,
+      nopol: "A",
+      outAt: at(2026, 11, 2, index + 1),
+    }));
+    const rows = dashboardTripRows(manyTrips, areaOf, "Semua", bounds);
+    expect(rows.map((trip) => trip.id)).toEqual([8, 7, 6, 5, 4, 3]);
+    expect(manyTrips.map((trip) => trip.id)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
   });
 });
