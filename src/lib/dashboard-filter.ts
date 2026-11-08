@@ -58,7 +58,7 @@ export function dashboardTripRows<T extends { nopol: string; outAt: number; inAt
   areaOf: (nopol: string) => string | undefined,
   selectedArea: string,
   bounds: { start: number; end: number },
-  limit = 8,
+  limit = 6,
 ): T[] {
   return trips
     .filter((trip) =>
