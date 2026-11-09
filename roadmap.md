@@ -15,6 +15,7 @@
 - [x] Filter waktu Dashboard: Hari ini, Minggu ini, Bulan ini, Custom — uji otomatis dan alur login/check-out/check-in di pratinjau
 - [x] Tambahkan foto odometer terpisah pada Check-Out dan Check-In
 - [x] Tambahkan rincian Trip Terbaru dan status perjalanan per kendaraan di Dashboard
+- [x] Pindahkan Trip Terbaru ke atas grafik Kendaraan per Wilayah Kerja
 - [x] Login sementara admin/admin dilepas atas permintaan pengguna
 - [ ] Login & peran (satpam, admin) — ditunda atas permintaan pengguna
 - [ ] Simpan data & foto ke database
