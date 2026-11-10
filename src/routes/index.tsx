@@ -62,14 +62,15 @@ function App() {
   const [msg, setMsg] = useState("");
   const [reportBlob, setReportBlob] = useState<Blob | null>(null);
   const [reportError, setReportError] = useState("");
+  const [reportTab, setReportTab] = useState<TipeKendaraan>("dinas");
   useEffect(() => {
     if (menu !== "Laporan") return;
     let cancelled = false;
     setReportBlob(null);
     setReportError("");
-    createReportBlob(trips, kend).then(blob => { if (!cancelled) setReportBlob(blob); }).catch(() => { if (!cancelled) setReportError("Laporan belum dapat disiapkan. Buka kembali menu Laporan untuk mencoba lagi."); });
+    (reportTab === "tamu" ? createGuestReportBlob(trips) : createReportBlob(trips, kend)).then(blob => { if (!cancelled) setReportBlob(blob); }).catch(() => { if (!cancelled) setReportError("Laporan belum dapat disiapkan. Buka kembali menu Laporan untuk mencoba lagi."); });
     return () => { cancelled = true; };
-  }, [menu, trips, kend]);
+  }, [menu, trips, kend, reportTab]);
 
   const aktif = trips.filter((t) => !t.inAt);
   const selesai = trips.filter((t) => t.inAt);
