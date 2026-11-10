@@ -25,7 +25,7 @@ export async function createReportBlob(trips: Trip[], vehicles: Kendaraan[]) {
     { header: "Kondisi", key: "kondisi", width: 36 },
   ];
   for (const trip of trips) {
-    if (trip.inAt === undefined || trip.odoIn === undefined) continue;
+    if (trip.tipe === "tamu" || trip.inAt === undefined || trip.odoIn === undefined) continue;
     const vehicle = vehicles.find(v => v.nopol === trip.nopol);
     const distance = trip.odoIn - trip.odoOut;
     const efficiency = vehicle?.kml && vehicle.kml > 0 ? vehicle.kml : null;
@@ -55,6 +55,47 @@ export async function createReportBlob(trips: Trip[], vehicles: Kendaraan[]) {
   header.height = 32;
   ["keluar", "kembali"].forEach(key => { sheet.getColumn(key).numFmt = "dd/mm/yyyy hh:mm"; });
   ["odoOut", "odoIn", "jarak", "kml", "bbm", "durasi"].forEach(key => { sheet.getColumn(key).numFmt = "#,##0.00"; });
+  const bytes = await workbook.xlsx.writeBuffer();
+  return new Blob([new Uint8Array(bytes)], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+}
+
+export async function createGuestReportBlob(trips: Trip[]) {
+  const { Workbook } = await import("exceljs");
+  const workbook = new Workbook();
+  workbook.creator = "SI Kendaraan Dinas UPT Bandung";
+  const sheet = workbook.addWorksheet("Laporan Kendaraan Tamu");
+  sheet.columns = [
+    { header: "Nomor Polisi", key: "nopol", width: 18 },
+    { header: "Nama Tamu", key: "user", width: 28 },
+    { header: "Instansi", key: "bidang", width: 28 },
+    { header: "Keperluan", key: "tujuan", width: 32 },
+    { header: "Masuk", key: "masuk", width: 22 },
+    { header: "Keluar", key: "keluar", width: 22 },
+    { header: "Satpam Masuk", key: "satpamIn", width: 24 },
+    { header: "Satpam Keluar", key: "satpamOut", width: 24 },
+    { header: "Lama Kunjungan (jam)", key: "durasi", width: 24 },
+    { header: "Kondisi", key: "kondisi", width: 36 },
+  ];
+  const excelDate = (ms: number) => new Date(ms - new Date(ms).getTimezoneOffset() * 60_000);
+  for (const trip of trips) {
+    if (trip.tipe !== "tamu" || trip.inAt === undefined) continue;
+    // Guest flow is reversed: outAt = arrival (Check-In), inAt = departure (Check-Out).
+    const row = sheet.addRow({
+      nopol: trip.nopol, user: trip.user ?? "", bidang: trip.bidang ?? "", tujuan: trip.tujuan,
+      masuk: excelDate(trip.outAt), keluar: excelDate(trip.inAt),
+      satpamIn: trip.satpamOut, satpamOut: trip.satpamIn ?? "", kondisi: trip.kondisi ?? "",
+    });
+    const n = row.number;
+    row.getCell("durasi").value = { formula: `(F${n}-E${n})*24`, result: (trip.inAt - trip.outAt) / 3_600_000 };
+  }
+  sheet.views = [{ state: "frozen", ySplit: 1 }];
+  sheet.autoFilter = { from: "A1", to: `J${Math.max(1, sheet.rowCount)}` };
+  sheet.eachRow(row => { row.font = { name: "Arial", size: 11 }; row.alignment = { vertical: "top", wrapText: true }; });
+  const header = sheet.getRow(1);
+  header.font = { name: "Arial", size: 11, bold: true };
+  header.height = 32;
+  ["masuk", "keluar"].forEach(key => { sheet.getColumn(key).numFmt = "dd/mm/yyyy hh:mm"; });
+  sheet.getColumn("durasi").numFmt = "#,##0.00";
   const bytes = await workbook.xlsx.writeBuffer();
   return new Blob([new Uint8Array(bytes)], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
 }
