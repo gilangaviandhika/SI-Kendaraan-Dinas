@@ -235,6 +235,47 @@ function App() {
                 ))}
               </div>
             </div>
+            <Card className="overflow-x-auto">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <h3 className="flex items-center gap-2 font-bold"><RouteIcon size={18} className="text-primary" />Trip Terbaru</h3>
+                <span className="text-xs text-muted-foreground">{tripTerbaru.length} perjalanan</span>
+              </div>
+              <table aria-label="Trip terbaru" className="w-full min-w-[52rem] text-sm">
+                <thead className="text-left text-muted-foreground">
+                  <tr>
+                    <th className="py-2 pr-4">Kode Trip</th>
+                    <th className="py-2 pr-4">Tujuan</th>
+                    <th className="py-2 pr-4">Kendaraan</th>
+                    <th className="py-2 pr-4">Driver</th>
+                    <th className="py-2 pr-4">Waktu Berangkat</th>
+                    <th className="py-2">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tripTerbaru.map((trip) => (
+                    <tr key={trip.id} className="border-t align-top">
+                      <td className="py-3 pr-4 font-mono text-xs">{String(trip.id)}</td>
+                      <td className="py-3 pr-4 font-medium">{trip.tujuan || "—"}</td>
+                      <td className="py-3 pr-4 font-semibold">{kend.find((vehicle) => vehicle.nopol === trip.nopol)?.merk ?? trip.nopol} ({trip.nopol})</td>
+                      <td className="py-3 pr-4">{trip.driver}</td>
+                      <td className="py-3 pr-4">{fmtWaktu(trip.outAt)}</td>
+                      <td className="py-3">
+                        <span className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${trip.inAt === undefined ? "bg-warning/20 text-foreground" : "bg-success/15 text-success"}`}>
+                          {trip.inAt === undefined ? "Sedang Berjalan" : "Selesai"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {tripTerbaru.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                        Belum ada perjalanan pada rentang waktu ini.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </Card>
             {(() => {
               const tamuAll = trips.filter((t) => t.tipe === "tamu");
               const tamuAktif = tamuAll.filter((t) => !t.inAt).sort((a, b) => a.outAt - b.outAt);
@@ -278,47 +319,6 @@ function App() {
                 </div>
               );
             })()}
-            <Card className="overflow-x-auto">
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <h3 className="flex items-center gap-2 font-bold"><RouteIcon size={18} className="text-primary" />Trip Terbaru</h3>
-                <span className="text-xs text-muted-foreground">{tripTerbaru.length} perjalanan</span>
-              </div>
-              <table aria-label="Trip terbaru" className="w-full min-w-[52rem] text-sm">
-                <thead className="text-left text-muted-foreground">
-                  <tr>
-                    <th className="py-2 pr-4">Kode Trip</th>
-                    <th className="py-2 pr-4">Tujuan</th>
-                    <th className="py-2 pr-4">Kendaraan</th>
-                    <th className="py-2 pr-4">Driver</th>
-                    <th className="py-2 pr-4">Waktu Berangkat</th>
-                    <th className="py-2">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tripTerbaru.map((trip) => (
-                    <tr key={trip.id} className="border-t align-top">
-                      <td className="py-3 pr-4 font-mono text-xs">{String(trip.id)}</td>
-                      <td className="py-3 pr-4 font-medium">{trip.tujuan || "—"}</td>
-                      <td className="py-3 pr-4 font-semibold">{kend.find((vehicle) => vehicle.nopol === trip.nopol)?.merk ?? trip.nopol} ({trip.nopol})</td>
-                      <td className="py-3 pr-4">{trip.driver}</td>
-                      <td className="py-3 pr-4">{fmtWaktu(trip.outAt)}</td>
-                      <td className="py-3">
-                        <span className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${trip.inAt === undefined ? "bg-warning/20 text-foreground" : "bg-success/15 text-success"}`}>
-                          {trip.inAt === undefined ? "Sedang Berjalan" : "Selesai"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                  {tripTerbaru.length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="py-8 text-center text-muted-foreground">
-                        Belum ada perjalanan pada rentang waktu ini.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </Card>
             <div className="grid gap-4 lg:grid-cols-2">
               <Card>
                 <h3 className="mb-1 font-bold">Kendaraan per Wilayah Kerja</h3>
