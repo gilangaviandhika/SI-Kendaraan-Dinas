@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isCheckoutValid, isCheckinValid, type CheckoutForm } from "@/lib/checkout";
+import { isCheckoutValid, isCheckinValid, isGuestCheckoutValid, isGuestCheckinValid, type CheckoutForm } from "@/lib/checkout";
 import { kendaraan0, type Trip } from "@/lib/vehicle-data";
 
 const form: CheckoutForm = { nopol: "B 2240 PYF", driver: "EGI RIFKI TRIADI", tujuan: "Bandung", user: "Budi", bidang: "Bidang Umum", satpam: "Satpam", odo: "100", fotoOdo: "odometer", foto: ["depan", "belakang"] };
@@ -30,5 +30,18 @@ describe("Foto odometer saat Check-In", () => {
   it("requires a separate odometer photo before check-in", () => {
     expect(isCheckinValid(checkinForm, trip)).toBe(true);
     expect(isCheckinValid({ ...checkinForm, fotoOdo: "" }, trip)).toBe(false);
+  });
+});
+describe("Kendaraan tamu", () => {
+  const g = { nopol: "D 1 X", tujuan: "Rapat", user: "Tamu A", bidang: "PLN UID", foto: ["d", "b"] };
+  it("check-out tamu tidak memerlukan odometer, tetapi wajib nama tamu dan instansi", () => {
+    expect(isGuestCheckoutValid(g)).toBe(true);
+    expect(isGuestCheckoutValid({ ...g, user: " " })).toBe(false);
+    expect(isGuestCheckoutValid({ ...g, bidang: "" })).toBe(false);
+  });
+  it("check-in tamu tanpa odometer", () => {
+    const t: Trip = { ...trip, tipe: "tamu" };
+    expect(isGuestCheckinValid({ foto: ["a", "b"], user: "Tamu A", bidang: "PLN" }, t)).toBe(true);
+    expect(isGuestCheckinValid({ foto: ["a", "b"], user: "Tamu A", bidang: "PLN" }, trip)).toBe(false);
   });
 });
