@@ -98,7 +98,7 @@ function App() {
     if (tamu) {
       setTrips((t) => [{ id: Date.now(), tipe: "tamu", nopol: co.nopol.trim(), driver: co.user.trim(), tujuan: co.tujuan, user: co.user.trim(), bidang: co.bidang.trim(), satpamOut: co.satpam, outAt: Date.now(), odoOut: 0, fotoOut: co.foto }, ...t]);
       setCo({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""] });
-      flash("Check-out kendaraan tamu tercatat.");
+      flash("Kedatangan tamu tercatat (Check-In). Proses Check-Out saat tamu keluar.");
       setMenu("Dalam Perjalanan");
       return;
     }
@@ -118,7 +118,7 @@ function App() {
     if (tSel.tipe === "tamu") {
       setTrips((t) => t.map((x) => (x.id === ci.id ? { ...x, satpamIn: ci.satpam, inAt: Date.now(), odoIn: 0, fotoIn: ci.foto, kondisi: ci.kondisi, user: ci.user.trim(), bidang: ci.bidang.trim() } : x)));
       setCi({ id: 0, satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan", user: "", bidang: "" });
-      flash("Check-in kendaraan tamu tercatat.");
+      flash("Tamu sudah keluar (Check-Out) dan tercatat di laporan.");
       setMenu("Laporan");
       return;
     }
@@ -340,30 +340,30 @@ function App() {
           </div>
         )}
 
-        {menu === "Check-Out" && (
+        {((menu === "Check-Out" && !tamu) || (menu === "Check-In" && tamu)) && (
           <Card className="max-w-3xl space-y-5">
             <div role="group" aria-label="Tipe kendaraan" className="flex gap-2">{(["dinas", "tamu"] as const).map((v) => <Button key={v} type="button" variant={tipe === v ? "default" : "outline"} onClick={() => { setTipe(v); setCo({ ...co, nopol: "", driver: "", odo: "" }); setCi({ ...ci, id: 0 }); }}>{v === "dinas" ? "Kendaraan Dinas" : "Kendaraan Tamu"}</Button>)}</div>
-            {tamu ? <Steps items={["Data tamu", "Foto kendaraan", "Kirim"]} active={!co.nopol || !co.user || !co.bidang ? 0 : !co.foto.every(Boolean) ? 1 : 2} /> : <Steps items={["Data perjalanan", "Odometer", "Foto odometer", "Foto kendaraan", "Kirim"]} active={!co.nopol || !co.driver ? 0 : !co.odo ? 1 : !co.fotoOdo ? 2 : !co.foto.every(Boolean) ? 3 : 4} />}
+            {tamu ? <Steps items={["Data tamu masuk", "Foto kendaraan", "Kirim"]} active={!co.nopol || !co.user || !co.bidang ? 0 : !co.foto.every(Boolean) ? 1 : 2} /> : <Steps items={["Data perjalanan", "Odometer", "Foto odometer", "Foto kendaraan", "Kirim"]} active={!co.nopol || !co.driver ? 0 : !co.odo ? 1 : !co.fotoOdo ? 2 : !co.foto.every(Boolean) ? 3 : 4} />}
             <div className="grid gap-3 md:grid-cols-2">
               {tamu ? <>
-              <input aria-label="Nomor polisi kendaraan tamu" className={inp} placeholder="Nomor polisi kendaraan tamu" value={co.nopol} onChange={(e) => setCo({ ...co, nopol: e.target.value })} />
+              <label className="space-y-1 text-sm font-semibold"><span>Nomor Polisi</span><input aria-label="Nomor polisi kendaraan tamu" className={inp} placeholder="Contoh: D 1234 AB" value={co.nopol} onChange={(e) => setCo({ ...co, nopol: e.target.value })} /></label>
               <label className="space-y-1 text-sm font-semibold"><span>Nama Tamu</span><input className={inp} placeholder="Nama tamu" value={co.user} onChange={(e) => setCo({ ...co, user: e.target.value })} /></label>
               <label className="space-y-1 text-sm font-semibold"><span>Instansi</span><input className={inp} placeholder="Asal instansi" value={co.bidang} onChange={(e) => setCo({ ...co, bidang: e.target.value })} /></label>
               </> : <>
-              <select aria-label="Kendaraan tersedia" className={inp} value={co.nopol} onChange={(e) => setCo({ ...co, nopol: e.target.value, odo: String(kend.find((k) => k.nopol === e.target.value)?.odo ?? "") })}>
+              <label className="space-y-1 text-sm font-semibold"><span>Kendaraan</span><select aria-label="Kendaraan tersedia" className={inp} value={co.nopol} onChange={(e) => setCo({ ...co, nopol: e.target.value, odo: String(kend.find((k) => k.nopol === e.target.value)?.odo ?? "") })}>
                 <option value="">Pilih kendaraan tersedia…</option>
                 {kend.filter((k) => k.status === "Tersedia").map((k) => <option key={k.nopol} value={k.nopol}>{k.nopol} — {k.merk}</option>)}
-              </select>
-              <select aria-label="Driver" className={inp} value={co.driver} onChange={(e) => setCo({ ...co, driver: e.target.value })}>
+              </select></label>
+              <label className="space-y-1 text-sm font-semibold"><span>Driver</span><select aria-label="Driver" className={inp} value={co.driver} onChange={(e) => setCo({ ...co, driver: e.target.value })}>
                 <option value="">Pilih driver…</option>
                 {drivers.filter((d) => !aktif.some((t) => t.driver === d.nama) && (!kSel || !d.wilayah || d.wilayah === kSel.area)).map((d) => <option key={d.nama} value={d.nama}>{d.nama}{d.wilayah ? ` — ${d.wilayah}` : ""}</option>)}
-              </select>
+              </select></label>
               <label className="space-y-1 text-sm font-semibold"><span>User</span><input className={inp} list="checkout-users" placeholder="Nama pegawai" value={co.user} onChange={(e) => { const user = users.find(u => u.nama === e.target.value); setCo({ ...co, user: e.target.value, bidang: user?.bidang || co.bidang }); }} /></label>
               <datalist id="checkout-users">{users.map(u => <option key={u.nama} value={u.nama} />)}</datalist>
               <label className="space-y-1 text-sm font-semibold"><span>Bidang</span><input className={inp} placeholder="Bidang pegawai" value={co.bidang} onChange={e => setCo({ ...co, bidang: e.target.value })} /></label>
               </>}
-              <input className={inp} placeholder="Tujuan / keperluan" value={co.tujuan} onChange={(e) => setCo({ ...co, tujuan: e.target.value })} />
-              <select className={inp} value={co.satpam} onChange={(e) => setCo({ ...co, satpam: e.target.value })}>{satpams.map((s) => <option key={s}>{s}</option>)}</select>
+              <label className="space-y-1 text-sm font-semibold"><span>{tamu ? "Keperluan" : "Tujuan"}</span><input className={inp} placeholder={tamu ? "Keperluan bertamu" : "Tujuan / keperluan"} value={co.tujuan} onChange={(e) => setCo({ ...co, tujuan: e.target.value })} /></label>
+              <label className="space-y-1 text-sm font-semibold"><span>Petugas Satpam</span><select className={inp} value={co.satpam} onChange={(e) => setCo({ ...co, satpam: e.target.value })}>{satpams.map((s) => <option key={s}>{s}</option>)}</select></label>
             </div>
             {!tamu && <>
             <div>
@@ -384,7 +384,7 @@ function App() {
                 ))}
               </div>
             </div>
-            <Button disabled={!coValid} onClick={submitOut}>Kirim Data Check-Out</Button>
+            <Button disabled={!coValid} onClick={submitOut}>{tamu ? "Kirim Data Check-In Tamu" : "Kirim Data Check-Out"}</Button>
           </Card>
         )}
 
@@ -398,24 +398,24 @@ function App() {
                   <p className="text-sm">{t.tipe === "tamu" ? <>Kendaraan Tamu · Nama Tamu: {t.user || "—"} · Instansi: {t.bidang || "—"}</> : <>User: {t.user || "—"} · Bidang: {t.bidang || "—"}</>}</p>
                   <p className="text-sm text-muted-foreground">{t.tujuan} — keluar {fmtWaktu(t.outAt)}{t.tipe !== "tamu" && <> · odometer {t.odoOut.toLocaleString("id-ID")} KM</>}</p>
                 </div>
-                <button className={btn} onClick={() => { setTipe(t.tipe === "tamu" ? "tamu" : "dinas"); setCi({ ...ci, id: t.id, user: t.user ?? "", bidang: t.bidang ?? "" }); setMenu("Check-In"); }}>Check-In</button>
+                <button className={btn} onClick={() => { setTipe(t.tipe === "tamu" ? "tamu" : "dinas"); setCi({ ...ci, id: t.id, user: t.user ?? "", bidang: t.bidang ?? "" }); setMenu(t.tipe === "tamu" ? "Check-Out" : "Check-In"); }}>{t.tipe === "tamu" ? "Check-Out" : "Check-In"}</button>
               </Card>
             ))}
           </div>
         )}
 
-        {menu === "Check-In" && (
+        {((menu === "Check-In" && !tamu) || (menu === "Check-Out" && tamu)) && (
           <Card className="max-w-3xl space-y-5">
             <div role="group" aria-label="Tipe kendaraan" className="flex gap-2">{(["dinas", "tamu"] as const).map((v) => <Button key={v} type="button" variant={tipe === v ? "default" : "outline"} onClick={() => { setTipe(v); setCo({ ...co, nopol: "", driver: "", odo: "" }); setCi({ ...ci, id: 0 }); }}>{v === "dinas" ? "Kendaraan Dinas" : "Kendaraan Tamu"}</Button>)}</div>
             {tamu ? <Steps items={["Pilih kendaraan tamu", "Foto kondisi", "Kirim"]} active={!ci.id ? 0 : !ci.foto.every(Boolean) ? 1 : 2} /> : <Steps items={["Pilih perjalanan", "Odometer akhir", "Foto odometer", "Foto kondisi", "Kirim"]} active={!ci.id ? 0 : !ci.odo ? 1 : !ci.fotoOdo ? 2 : !ci.foto.every(Boolean) ? 3 : 4} />}
             <div className="grid gap-3 md:grid-cols-2">
-              <select className={inp} value={ci.id} onChange={(e) => { const trip = aktif.find(t => t.id === Number(e.target.value)); setCi({ ...ci, id: Number(e.target.value), user: trip?.user ?? "", bidang: trip?.bidang ?? "" }); }}>
+              <label className="space-y-1 text-sm font-semibold"><span>{tamu ? "Kendaraan Tamu" : "Kendaraan"}</span><select className={inp} value={ci.id} onChange={(e) => { const trip = aktif.find(t => t.id === Number(e.target.value)); setCi({ ...ci, id: Number(e.target.value), user: trip?.user ?? "", bidang: trip?.bidang ?? "" }); }}>
                 <option value={0}>{tamu ? "Pilih kendaraan tamu yang keluar…" : "Pilih kendaraan yang kembali…"}</option>
-                {aktif.filter((t) => (t.tipe === "tamu") === tamu).map((t) => <option key={t.id} value={t.id}>{t.nopol} — {t.driver}</option>)}
-              </select>
-              <select className={inp} value={ci.satpam} onChange={(e) => setCi({ ...ci, satpam: e.target.value })}>{satpams.map((s) => <option key={s}>{s}</option>)}</select>
-              <input className={inp} aria-label={tamu ? "Nama Tamu" : "User"} placeholder={tamu ? "Nama tamu" : "User (nama pegawai yang membawa kendaraan)"} value={ci.user} onChange={(e) => setCi({ ...ci, user: e.target.value })} />
-              <input className={inp} aria-label={tamu ? "Instansi" : "Bidang"} placeholder={tamu ? "Instansi" : "Bidang tujuan (contoh: Bidang Umum)"} value={ci.bidang} onChange={(e) => setCi({ ...ci, bidang: e.target.value })} />
+                {aktif.filter((t) => (t.tipe === "tamu") === tamu).map((t) => <option key={t.id} value={t.id}>{t.nopol} — {t.tipe === "tamu" ? `${t.user} (${t.bidang})` : t.driver}</option>)}
+              </select></label>
+              <label className="space-y-1 text-sm font-semibold"><span>Petugas Satpam</span><select className={inp} value={ci.satpam} onChange={(e) => setCi({ ...ci, satpam: e.target.value })}>{satpams.map((s) => <option key={s}>{s}</option>)}</select></label>
+              <label className="space-y-1 text-sm font-semibold"><span>{tamu ? "Nama Tamu" : "User"}</span><input className={inp} aria-label={tamu ? "Nama Tamu" : "User"} placeholder={tamu ? "Nama tamu" : "Nama pegawai yang membawa kendaraan"} value={ci.user} onChange={(e) => setCi({ ...ci, user: e.target.value })} /></label>
+              <label className="space-y-1 text-sm font-semibold"><span>{tamu ? "Instansi" : "Bidang"}</span><input className={inp} aria-label={tamu ? "Instansi" : "Bidang"} placeholder={tamu ? "Instansi" : "Contoh: Bidang Umum"} value={ci.bidang} onChange={(e) => setCi({ ...ci, bidang: e.target.value })} /></label>
             </div>
             {!tamu && <>
             <div>
@@ -438,7 +438,7 @@ function App() {
               </div>
             </div>
             <input className={inp} placeholder="Catatan kondisi" value={ci.kondisi} onChange={(e) => setCi({ ...ci, kondisi: e.target.value })} />
-            <button className={btn} disabled={!ciValid} onClick={submitIn}>Kirim Data Check-In</button>
+            <button className={btn} disabled={!ciValid} onClick={submitIn}>{tamu ? "Kirim Data Check-Out Tamu" : "Kirim Data Check-In"}</button>
           </Card>
         )}
 
