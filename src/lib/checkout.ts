@@ -11,3 +11,12 @@ export type CheckinForm = { odo: string; fotoOdo: string; foto: string[]; user: 
 export function isCheckinValid(form: CheckinForm, trip?: Trip) {
   return Boolean(trip && Number.isFinite(Number(form.odo)) && Number(form.odo) > trip.odoOut && form.fotoOdo && form.foto.length === 2 && form.foto.every(Boolean) && form.user.trim() && form.bidang.trim());
 }
+// Kendaraan tamu: tanpa odometer; "user" = nama tamu, "bidang" = instansi.
+export type TipeKendaraan = "dinas" | "tamu";
+export type GuestCheckoutForm = { nopol: string; tujuan: string; user: string; bidang: string; foto: string[] };
+export function isGuestCheckoutValid(form: GuestCheckoutForm) {
+  return Boolean(form.nopol.trim() && form.tujuan.trim() && form.user.trim() && form.bidang.trim() && form.foto.length === 2 && form.foto.every(Boolean));
+}
+export function isGuestCheckinValid(form: { foto: string[]; user: string; bidang: string }, trip?: Trip) {
+  return Boolean(trip?.tipe === "tamu" && form.foto.length === 2 && form.foto.every(Boolean) && form.user.trim() && form.bidang.trim());
+}

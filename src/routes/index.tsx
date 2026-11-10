@@ -5,7 +5,7 @@ import { createReportBlob, deliverReport } from "@/lib/report-export";
 import { type Trip } from "@/lib/vehicle-data";
 import { useFleet } from "@/components/fleet-provider";
 import { MasterNav } from "@/components/master-nav";
-import { isCheckoutValid, isCheckinValid } from "@/lib/checkout";
+import { isCheckoutValid, isCheckinValid, isGuestCheckoutValid, isGuestCheckinValid, type TipeKendaraan } from "@/lib/checkout";
 import { dashboardTripRows, inRange, rangeBounds, timeRangePresets, type TimeRangePreset } from "@/lib/dashboard-filter";
 import { ServiceNav } from "@/components/service-nav";
 import { Button } from "@/components/ui/button";
@@ -88,12 +88,21 @@ function App() {
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(""), 3500); };
 
   // Check-out form
+  const [tipe, setTipe] = useState<TipeKendaraan>("dinas");
+  const tamu = tipe === "tamu";
   const [co, setCo] = useState({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""] });
   const kSel = kend.find((k) => k.nopol === co.nopol);
-  const coValid = isCheckoutValid(co, kSel);
+  const coValid = tamu ? isGuestCheckoutValid(co) : isCheckoutValid(co, kSel);
   const submitOut = () => {
     if (!coValid) return;
-    setTrips((t) => [{ id: Date.now(), nopol: co.nopol, driver: co.driver, tujuan: co.tujuan, user: co.user.trim(), bidang: co.bidang.trim(), satpamOut: co.satpam, outAt: Date.now(), odoOut: Number(co.odo), fotoOdoOut: co.fotoOdo, fotoOut: co.foto }, ...t]);
+    if (tamu) {
+      setTrips((t) => [{ id: Date.now(), tipe: "tamu", nopol: co.nopol.trim(), driver: co.user.trim(), tujuan: co.tujuan, user: co.user.trim(), bidang: co.bidang.trim(), satpamOut: co.satpam, outAt: Date.now(), odoOut: 0, fotoOut: co.foto }, ...t]);
+      setCo({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""] });
+      flash("Check-out kendaraan tamu tercatat.");
+      setMenu("Dalam Perjalanan");
+      return;
+    }
+    setTrips((t) => [{ id: Date.now(), tipe: "dinas", nopol: co.nopol, driver: co.driver, tujuan: co.tujuan, user: co.user.trim(), bidang: co.bidang.trim(), satpamOut: co.satpam, outAt: Date.now(), odoOut: Number(co.odo), fotoOdoOut: co.fotoOdo, fotoOut: co.foto }, ...t]);
     setKend((ks) => ks.map((k) => (k.nopol === co.nopol ? { ...k, status: "Digunakan" } : k)));
     setCo({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""] });
     flash("Check-out tercatat. Kendaraan kini berstatus Digunakan.");
@@ -103,9 +112,16 @@ function App() {
   // Check-in form
   const [ci, setCi] = useState({ id: 0, satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan", user: "", bidang: "" });
   const tSel = trips.find((t) => t.id === ci.id);
-  const ciValid = isCheckinValid(ci, tSel);
+  const ciValid = tSel?.tipe === "tamu" ? isGuestCheckinValid(ci, tSel) : isCheckinValid(ci, tSel);
   const submitIn = () => {
     if (!ciValid || !tSel) return;
+    if (tSel.tipe === "tamu") {
+      setTrips((t) => t.map((x) => (x.id === ci.id ? { ...x, satpamIn: ci.satpam, inAt: Date.now(), odoIn: 0, fotoIn: ci.foto, kondisi: ci.kondisi, user: ci.user.trim(), bidang: ci.bidang.trim() } : x)));
+      setCi({ id: 0, satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan", user: "", bidang: "" });
+      flash("Check-in kendaraan tamu tercatat.");
+      setMenu("Laporan");
+      return;
+    }
     setTrips((t) => t.map((x) => (x.id === ci.id ? { ...x, satpamIn: ci.satpam, inAt: Date.now(), odoIn: Number(ci.odo), fotoOdoIn: ci.fotoOdo, fotoIn: ci.foto, kondisi: ci.kondisi, user: ci.user.trim(), bidang: ci.bidang.trim() } : x)));
     setKend((ks) => ks.map((k) => (k.nopol === tSel.nopol ? { ...k, status: "Tersedia", odo: Number(ci.odo) } : k)));
     setCi({ id: 0, satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan", user: "", bidang: "" });
@@ -326,8 +342,14 @@ function App() {
 
         {menu === "Check-Out" && (
           <Card className="max-w-3xl space-y-5">
-            <Steps items={["Data perjalanan", "Odometer", "Foto odometer", "Foto kendaraan", "Kirim"]} active={!co.nopol || !co.driver ? 0 : !co.odo ? 1 : !co.fotoOdo ? 2 : !co.foto.every(Boolean) ? 3 : 4} />
+            <div role="group" aria-label="Tipe kendaraan" className="flex gap-2">{(["dinas", "tamu"] as const).map((v) => <Button key={v} type="button" variant={tipe === v ? "default" : "outline"} onClick={() => { setTipe(v); setCo({ ...co, nopol: "", driver: "", odo: "" }); setCi({ ...ci, id: 0 }); }}>{v === "dinas" ? "Kendaraan Dinas" : "Kendaraan Tamu"}</Button>)}</div>
+            {tamu ? <Steps items={["Data tamu", "Foto kendaraan", "Kirim"]} active={!co.nopol || !co.user || !co.bidang ? 0 : !co.foto.every(Boolean) ? 1 : 2} /> : <Steps items={["Data perjalanan", "Odometer", "Foto odometer", "Foto kendaraan", "Kirim"]} active={!co.nopol || !co.driver ? 0 : !co.odo ? 1 : !co.fotoOdo ? 2 : !co.foto.every(Boolean) ? 3 : 4} />}
             <div className="grid gap-3 md:grid-cols-2">
+              {tamu ? <>
+              <input aria-label="Nomor polisi kendaraan tamu" className={inp} placeholder="Nomor polisi kendaraan tamu" value={co.nopol} onChange={(e) => setCo({ ...co, nopol: e.target.value })} />
+              <label className="space-y-1 text-sm font-semibold"><span>Nama Tamu</span><input className={inp} placeholder="Nama tamu" value={co.user} onChange={(e) => setCo({ ...co, user: e.target.value })} /></label>
+              <label className="space-y-1 text-sm font-semibold"><span>Instansi</span><input className={inp} placeholder="Asal instansi" value={co.bidang} onChange={(e) => setCo({ ...co, bidang: e.target.value })} /></label>
+              </> : <>
               <select aria-label="Kendaraan tersedia" className={inp} value={co.nopol} onChange={(e) => setCo({ ...co, nopol: e.target.value, odo: String(kend.find((k) => k.nopol === e.target.value)?.odo ?? "") })}>
                 <option value="">Pilih kendaraan tersedia…</option>
                 {kend.filter((k) => k.status === "Tersedia").map((k) => <option key={k.nopol} value={k.nopol}>{k.nopol} — {k.merk}</option>)}
@@ -339,9 +361,11 @@ function App() {
               <label className="space-y-1 text-sm font-semibold"><span>User</span><input className={inp} list="checkout-users" placeholder="Nama pegawai" value={co.user} onChange={(e) => { const user = users.find(u => u.nama === e.target.value); setCo({ ...co, user: e.target.value, bidang: user?.bidang || co.bidang }); }} /></label>
               <datalist id="checkout-users">{users.map(u => <option key={u.nama} value={u.nama} />)}</datalist>
               <label className="space-y-1 text-sm font-semibold"><span>Bidang</span><input className={inp} placeholder="Bidang pegawai" value={co.bidang} onChange={e => setCo({ ...co, bidang: e.target.value })} /></label>
+              </>}
               <input className={inp} placeholder="Tujuan / keperluan" value={co.tujuan} onChange={(e) => setCo({ ...co, tujuan: e.target.value })} />
               <select className={inp} value={co.satpam} onChange={(e) => setCo({ ...co, satpam: e.target.value })}>{satpams.map((s) => <option key={s}>{s}</option>)}</select>
             </div>
+            {!tamu && <>
             <div>
               <p className="mb-1 text-sm font-bold">🧭 Odometer saat berangkat (KM)</p>
               <input aria-label="Odometer saat berangkat (KM)" type="number" className={inp} value={co.odo} onChange={(e) => setCo({ ...co, odo: e.target.value })} />
@@ -351,6 +375,7 @@ function App() {
               <p className="mb-2 text-sm font-bold">Foto odometer saat berangkat</p>
               <div className="max-w-md"><Foto label="Foto odometer" value={co.fotoOdo} onChange={(u) => setCo({ ...co, fotoOdo: u })} /></div>
             </div>
+            </>}
             <div>
               <p className="mb-2 text-sm font-bold">Foto kendaraan</p>
               <div className="grid grid-cols-2 gap-3 max-w-md">
@@ -370,10 +395,10 @@ function App() {
               <Card key={t.id} className="flex flex-wrap items-center justify-between gap-3 border-warning/50">
                 <div>
                   <p className="font-bold">🚗 {t.nopol} · <span className="text-primary">{t.driver}</span></p>
-                  <p className="text-sm">User: {t.user || "—"} · Bidang: {t.bidang || "—"}</p>
-                  <p className="text-sm text-muted-foreground">{t.tujuan} — keluar {fmtWaktu(t.outAt)} · odometer {t.odoOut.toLocaleString("id-ID")} KM</p>
+                  <p className="text-sm">{t.tipe === "tamu" ? <>Kendaraan Tamu · Nama Tamu: {t.user || "—"} · Instansi: {t.bidang || "—"}</> : <>User: {t.user || "—"} · Bidang: {t.bidang || "—"}</>}</p>
+                  <p className="text-sm text-muted-foreground">{t.tujuan} — keluar {fmtWaktu(t.outAt)}{t.tipe !== "tamu" && <> · odometer {t.odoOut.toLocaleString("id-ID")} KM</>}</p>
                 </div>
-                <button className={btn} onClick={() => { setCi({ ...ci, id: t.id, user: t.user ?? "", bidang: t.bidang ?? "" }); setMenu("Check-In"); }}>Check-In</button>
+                <button className={btn} onClick={() => { setTipe(t.tipe === "tamu" ? "tamu" : "dinas"); setCi({ ...ci, id: t.id, user: t.user ?? "", bidang: t.bidang ?? "" }); setMenu("Check-In"); }}>Check-In</button>
               </Card>
             ))}
           </div>
@@ -381,16 +406,18 @@ function App() {
 
         {menu === "Check-In" && (
           <Card className="max-w-3xl space-y-5">
-            <Steps items={["Pilih perjalanan", "Odometer akhir", "Foto odometer", "Foto kondisi", "Kirim"]} active={!ci.id ? 0 : !ci.odo ? 1 : !ci.fotoOdo ? 2 : !ci.foto.every(Boolean) ? 3 : 4} />
+            <div role="group" aria-label="Tipe kendaraan" className="flex gap-2">{(["dinas", "tamu"] as const).map((v) => <Button key={v} type="button" variant={tipe === v ? "default" : "outline"} onClick={() => { setTipe(v); setCo({ ...co, nopol: "", driver: "", odo: "" }); setCi({ ...ci, id: 0 }); }}>{v === "dinas" ? "Kendaraan Dinas" : "Kendaraan Tamu"}</Button>)}</div>
+            {tamu ? <Steps items={["Pilih kendaraan tamu", "Foto kondisi", "Kirim"]} active={!ci.id ? 0 : !ci.foto.every(Boolean) ? 1 : 2} /> : <Steps items={["Pilih perjalanan", "Odometer akhir", "Foto odometer", "Foto kondisi", "Kirim"]} active={!ci.id ? 0 : !ci.odo ? 1 : !ci.fotoOdo ? 2 : !ci.foto.every(Boolean) ? 3 : 4} />}
             <div className="grid gap-3 md:grid-cols-2">
               <select className={inp} value={ci.id} onChange={(e) => { const trip = aktif.find(t => t.id === Number(e.target.value)); setCi({ ...ci, id: Number(e.target.value), user: trip?.user ?? "", bidang: trip?.bidang ?? "" }); }}>
-                <option value={0}>Pilih kendaraan yang kembali…</option>
-                {aktif.map((t) => <option key={t.id} value={t.id}>{t.nopol} — {t.driver}</option>)}
+                <option value={0}>{tamu ? "Pilih kendaraan tamu yang keluar…" : "Pilih kendaraan yang kembali…"}</option>
+                {aktif.filter((t) => (t.tipe === "tamu") === tamu).map((t) => <option key={t.id} value={t.id}>{t.nopol} — {t.driver}</option>)}
               </select>
               <select className={inp} value={ci.satpam} onChange={(e) => setCi({ ...ci, satpam: e.target.value })}>{satpams.map((s) => <option key={s}>{s}</option>)}</select>
-              <input className={inp} placeholder="User (nama pegawai yang membawa kendaraan)" value={ci.user} onChange={(e) => setCi({ ...ci, user: e.target.value })} />
-              <input className={inp} placeholder="Bidang tujuan (contoh: Bidang Umum)" value={ci.bidang} onChange={(e) => setCi({ ...ci, bidang: e.target.value })} />
+              <input className={inp} aria-label={tamu ? "Nama Tamu" : "User"} placeholder={tamu ? "Nama tamu" : "User (nama pegawai yang membawa kendaraan)"} value={ci.user} onChange={(e) => setCi({ ...ci, user: e.target.value })} />
+              <input className={inp} aria-label={tamu ? "Instansi" : "Bidang"} placeholder={tamu ? "Instansi" : "Bidang tujuan (contoh: Bidang Umum)"} value={ci.bidang} onChange={(e) => setCi({ ...ci, bidang: e.target.value })} />
             </div>
+            {!tamu && <>
             <div>
               <p className="mb-1 text-sm font-bold">🧭 Odometer akhir (KM)</p>
               <input type="number" className={inp} value={ci.odo} onChange={(e) => setCi({ ...ci, odo: e.target.value })} />
@@ -401,6 +428,7 @@ function App() {
               <p className="mb-2 text-sm font-bold">Foto odometer saat kembali</p>
               <div className="max-w-md"><Foto label="Foto odometer" value={ci.fotoOdo} onChange={(u) => setCi({ ...ci, fotoOdo: u })} /></div>
             </div>
+            </>}
             <div>
               <p className="mb-2 text-sm font-bold">Foto kondisi kendaraan</p>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
