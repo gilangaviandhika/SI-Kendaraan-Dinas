@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Download, Route as RouteIcon } from "lucide-react";
-import { createReportBlob, deliverReport } from "@/lib/report-export";
+import { createGuestReportBlob, createReportBlob, deliverReport } from "@/lib/report-export";
 import { type Trip } from "@/lib/vehicle-data";
 import { useFleet } from "@/components/fleet-provider";
 import { MasterNav } from "@/components/master-nav";
@@ -120,6 +120,7 @@ function App() {
       setTrips((t) => t.map((x) => (x.id === ci.id ? { ...x, satpamIn: ci.satpam, inAt: Date.now(), odoIn: 0, fotoIn: ci.foto, kondisi: ci.kondisi, user: ci.user.trim(), bidang: ci.bidang.trim() } : x)));
       setCi({ id: 0, satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan", user: "", bidang: "" });
       flash("Tamu sudah keluar (Check-Out) dan tercatat di laporan.");
+      setReportTab("tamu");
       setMenu("Laporan");
       return;
     }
@@ -445,16 +446,33 @@ function App() {
 
         {menu === "Laporan" && (
           <Card className="overflow-x-auto">
+            <div role="tablist" aria-label="Jenis laporan" className="mb-4 flex gap-2">{(["dinas", "tamu"] as const).map((v) => <Button key={v} role="tab" aria-selected={reportTab === v} variant={reportTab === v ? "default" : "outline"} onClick={() => setReportTab(v)}>{v === "dinas" ? "Kendaraan Dinas" : "Kendaraan Tamu"}</Button>)}</div>
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-              <h3 className="font-bold">Log perjalanan (dihitung otomatis)</h3>
-              <Button disabled={!reportBlob} onClick={() => { if (reportBlob) void deliverReport(reportBlob).catch(() => flash("Unduhan gagal. Silakan coba lagi.")); }}><Download size={16} />{reportBlob ? "Download Laporan" : "Menyiapkan Excel…"}</Button>
+              <h3 className="font-bold">{reportTab === "tamu" ? "Log kunjungan kendaraan tamu" : "Log perjalanan kendaraan dinas (dihitung otomatis)"}</h3>
+              <Button disabled={!reportBlob} onClick={() => { if (reportBlob) void deliverReport(reportBlob, `Laporan-Kendaraan-${reportTab === "tamu" ? "Tamu" : "Dinas"}-${new Date().toISOString().slice(0, 10)}.xlsx`).catch(() => flash("Unduhan gagal. Silakan coba lagi.")); }}><Download size={16} />{reportBlob ? "Download Laporan" : "Menyiapkan Excel…"}</Button>
             </div>
             {reportError && <p role="alert" className="mb-3 text-sm text-destructive">{reportError}</p>}
+            {reportTab === "tamu" ? (
+            <table className="w-full text-sm">
+              <thead className="text-left text-muted-foreground"><tr>
+                <th className="py-2">Nomor Polisi</th><th>Nama Tamu</th><th>Instansi</th><th>Keperluan</th><th>Masuk</th><th>Keluar</th><th>Kondisi</th><th>Foto</th>
+              </tr></thead>
+              <tbody>{selesai.filter((t) => t.tipe === "tamu").map((t) => (
+                <tr key={t.id} className="border-t align-top">
+                  <td className="py-3 font-semibold">{t.nopol}</td><td>{t.user || "-"}</td><td>{t.bidang || "-"}</td><td>{t.tujuan}</td>
+                  <td>{fmtWaktu(t.outAt)}<br /><span className="text-xs text-muted-foreground">{t.satpamOut}</span></td>
+                  <td>{fmtWaktu(t.inAt)}<br /><span className="text-xs text-muted-foreground">{t.satpamIn}</span></td>
+                  <td>{t.kondisi}</td>
+                  <td><div className="flex gap-1">{[...t.fotoOut, ...(t.fotoIn ?? [])].filter(Boolean).map((f, i) => <img key={i} src={f} alt="Foto kendaraan tamu" className="h-8 w-8 rounded object-cover" />)}</div></td>
+                </tr>
+              ))}</tbody>
+            </table>
+            ) : (
             <table className="w-full text-sm">
               <thead className="text-left text-muted-foreground"><tr>
                 <th className="py-2">Kendaraan</th><th>Driver</th><th>User</th><th>Bidang</th><th>Keluar</th><th>Kembali</th><th className="text-right">Jarak</th><th className="text-right">Est. BBM</th><th>Kondisi</th><th>Foto</th>
               </tr></thead>
-              <tbody>{selesai.map((t) => (
+              <tbody>{selesai.filter((t) => t.tipe !== "tamu").map((t) => (
                 <tr key={t.id} className="border-t align-top">
                   <td className="py-3 font-semibold">{t.nopol}</td><td>{t.driver}</td>
                   <td>{t.user ?? <span className="text-muted-foreground">-</span>}</td>
@@ -469,6 +487,7 @@ function App() {
                 </tr>
               ))}</tbody>
             </table>
+            )}
           </Card>
         )}
 
