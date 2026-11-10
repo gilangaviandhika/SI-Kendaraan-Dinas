@@ -235,6 +235,49 @@ function App() {
                 ))}
               </div>
             </div>
+            {(() => {
+              const tamuAll = trips.filter((t) => t.tipe === "tamu");
+              const tamuAktif = tamuAll.filter((t) => !t.inAt).sort((a, b) => a.outAt - b.outAt);
+              const tamuRentang = tamuAll.filter(dalamRentang);
+              const tamuSelesai = tamuRentang.filter((t) => t.inAt);
+              const rata = tamuSelesai.length ? tamuSelesai.reduce((s, t) => s + durasi(t), 0) / tamuSelesai.length : 0;
+              return (
+                <div className="space-y-4">
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Ringkasan Kendaraan Tamu</h3>
+                  <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                    {[
+                      { l: "Tamu Sedang Berkunjung", v: String(tamuAktif.length), c: "text-warning" },
+                      { l: "Total Tamu Masuk", v: String(tamuRentang.length), c: "text-primary" },
+                      { l: "Kunjungan Selesai", v: String(tamuSelesai.length), c: "text-success" },
+                      { l: "Rata-rata Waktu Kunjungan", v: tamuSelesai.length ? fmtDur(rata) : "-", c: "text-foreground" },
+                    ].map((s) => (
+                      <Card key={s.l}><p className="text-sm text-muted-foreground">{s.l}</p><p className={`mt-1 text-2xl font-extrabold ${s.c}`}>{s.v}</p></Card>
+                    ))}
+                  </div>
+                  <Card className="overflow-x-auto">
+                    <h3 className="mb-3 font-bold">Tamu Sedang Berkunjung</h3>
+                    <table aria-label="Tamu sedang berkunjung" className="w-full min-w-[48rem] text-sm">
+                      <thead className="text-left text-muted-foreground">
+                        <tr><th className="py-2 pr-4">Nomor Polisi</th><th className="py-2 pr-4">Nama Tamu / Instansi</th><th className="py-2 pr-4">Keperluan</th><th className="py-2 pr-4">Jam Masuk</th><th className="py-2 pr-4">Lama Berkunjung</th><th className="py-2">Aksi</th></tr>
+                      </thead>
+                      <tbody>
+                        {tamuAktif.map((t) => (
+                          <tr key={t.id} className="border-t align-top">
+                            <td className="py-3 pr-4 font-semibold">{t.nopol}</td>
+                            <td className="py-3 pr-4">{t.user || "—"}<span className="block text-xs text-muted-foreground">{t.bidang || "—"}</span></td>
+                            <td className="py-3 pr-4">{t.tujuan || "—"}</td>
+                            <td className="py-3 pr-4">{fmtWaktu(t.outAt)}</td>
+                            <td className="py-3 pr-4">{fmtDur(Date.now() - t.outAt)}</td>
+                            <td className="py-3"><Button size="sm" variant="outline" onClick={() => { setTipe("tamu"); setCi({ ...ci, id: t.id, user: t.user ?? "", bidang: t.bidang ?? "" }); setMenu("Check-Out"); }}>Check-Out</Button></td>
+                          </tr>
+                        ))}
+                        {tamuAktif.length === 0 && <tr><td colSpan={6} className="py-8 text-center text-muted-foreground">Saat ini tidak ada tamu yang sedang berkunjung.</td></tr>}
+                      </tbody>
+                    </table>
+                  </Card>
+                </div>
+              );
+            })()}
             <Card className="overflow-x-auto">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <h3 className="flex items-center gap-2 font-bold"><RouteIcon size={18} className="text-primary" />Trip Terbaru</h3>
