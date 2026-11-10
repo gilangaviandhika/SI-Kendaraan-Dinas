@@ -128,6 +128,7 @@ function App() {
     setKend((ks) => ks.map((k) => (k.nopol === tSel.nopol ? { ...k, status: "Tersedia", odo: Number(ci.odo) } : k)));
     setCi({ id: 0, satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan", user: "", bidang: "" });
     flash("Check-in tercatat. Jarak & BBM dihitung otomatis, kendaraan kembali Tersedia.");
+    setReportTab("dinas");
     setMenu("Laporan");
   };
 
