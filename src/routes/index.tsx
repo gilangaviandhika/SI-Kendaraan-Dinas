@@ -251,7 +251,8 @@ function App() {
                     <th className="py-2 pr-4">Waktu Berangkat</th>
                     <th className="py-2 pr-4">Waktu Check-In</th>
                     <th className="py-2 pr-4">Durasi</th>
-                    <th className="py-2">Status</th>
+                    <th className="py-2 pr-4">Status</th>
+                    <th className="py-2">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -269,11 +270,16 @@ function App() {
                           {trip.inAt === undefined ? "Sedang Berjalan" : "Selesai"}
                         </span>
                       </td>
+                      <td className="py-3">
+                        {trip.inAt === undefined
+                          ? <Button size="sm" onClick={() => { setTipe("dinas"); setCi({ ...ci, id: trip.id, user: trip.user ?? "", bidang: trip.bidang ?? "" }); setMenu("Check-In"); }}>Check-In</Button>
+                          : <Button size="sm" variant="outline" onClick={() => { setReportTab("dinas"); setMenu("Laporan"); }}>Lihat Laporan</Button>}
+                      </td>
                     </tr>
                   ))}
                   {tripTerbaru.length === 0 && (
                     <tr>
-                      <td colSpan={8} className="py-8 text-center text-muted-foreground">
+                      <td colSpan={9} className="py-8 text-center text-muted-foreground">
                         Belum ada perjalanan pada rentang waktu ini.
                       </td>
                     </tr>
