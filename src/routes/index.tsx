@@ -415,7 +415,7 @@ function App() {
             {!tamu && <>
             <div>
               <p className="mb-1 text-sm font-bold">🧭 Odometer saat berangkat (KM)</p>
-              <input aria-label="Odometer saat berangkat (KM)" type="number" className={inp + " max-w-[200px]"} value={co.odo} onChange={(e) => setCo({ ...co, odo: e.target.value })} />
+              <div className="flex items-center gap-2"><input aria-label="Odometer saat berangkat (KM)" type="number" readOnly={!!kSel && kSel.odo !== null && editOdo === null} className={inp + " max-w-[200px] read-only:bg-muted"} value={co.odo} onChange={(e) => setCo({ ...co, odo: e.target.value })} />{kSel && kSel.odo !== null && (editOdo === null ? <Button type="button" size="sm" variant="outline" onClick={() => setEditOdo(co.odo)}><Pencil size={14} />Edit</Button> : <><Button type="button" size="sm" onClick={() => setEditOdo(null)}>Simpan</Button><Button type="button" size="sm" variant="outline" onClick={() => { setCo({ ...co, odo: editOdo }); setEditOdo(null); }}>Batal</Button></>)}</div>
               {kSel && <p className="mt-1 text-xs text-muted-foreground">Odometer terakhir tercatat: {kSel.odo === null ? "Belum tersedia" : `${kSel.odo.toLocaleString("id-ID")} KM`}</p>}
             </div>
             <div>
@@ -468,15 +468,7 @@ function App() {
             <div>
               <p className="mb-1 text-sm font-bold">🧭 Odometer akhir (KM)</p>
               <input aria-label="Odometer akhir (KM)" type="number" className={inp + " max-w-[200px]"} value={ci.odo} onChange={(e) => setCi({ ...ci, odo: e.target.value })} />
-              {tSel && <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">{editOdo !== null ? <>
-                <span>Odometer saat berangkat:</span>
-                <input aria-label="Revisi odometer berangkat (KM)" type="number" className={inp + " max-w-[140px] py-1"} value={editOdo} onChange={(e) => setEditOdo(e.target.value)} />
-                <Button type="button" size="sm" disabled={editOdo === "" || Number(editOdo) < 0} onClick={() => { const v = Number(editOdo); setTrips((t) => t.map((x) => (x.id === tSel.id ? { ...x, odoOut: v } : x))); setEditOdo(null); }}>Simpan</Button>
-                <Button type="button" size="sm" variant="outline" onClick={() => setEditOdo(null)}>Batal</Button>
-              </> : <>
-                <span>Odometer saat berangkat: {tSel.odoOut.toLocaleString("id-ID")} KM</span>
-                <Button type="button" size="sm" variant="outline" onClick={() => setEditOdo(String(tSel.odoOut))}><Pencil size={14} />Edit</Button>
-              </>}</div>}
+              {tSel && <p className="mt-2 text-xs text-muted-foreground">Odometer saat berangkat: {tSel.odoOut.toLocaleString("id-ID")} KM</p>}
               {tSel && <p className="mt-1 text-xs text-muted-foreground">
                 {Number(ci.odo) > tSel.odoOut && <>Jarak tempuh <b>{(Number(ci.odo) - tSel.odoOut).toLocaleString("id-ID")} KM</b></>}</p>}
             </div>
