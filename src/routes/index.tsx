@@ -249,6 +249,8 @@ function App() {
                     <th className="py-2 pr-4">Kendaraan</th>
                     <th className="py-2 pr-4">Driver</th>
                     <th className="py-2 pr-4">Waktu Berangkat</th>
+                    <th className="py-2 pr-4">Waktu Check-In</th>
+                    <th className="py-2 pr-4">Durasi</th>
                     <th className="py-2">Status</th>
                   </tr>
                 </thead>
@@ -260,6 +262,8 @@ function App() {
                       <td className="py-3 pr-4 font-semibold">{kend.find((vehicle) => vehicle.nopol === trip.nopol)?.merk ?? trip.nopol} ({trip.nopol})</td>
                       <td className="py-3 pr-4">{trip.driver}</td>
                       <td className="py-3 pr-4">{fmtWaktu(trip.outAt)}</td>
+                      <td className="py-3 pr-4">{fmtWaktu(trip.inAt)}</td>
+                      <td className="py-3 pr-4 whitespace-nowrap">{fmtDur((trip.inAt ?? Date.now()) - trip.outAt)}{trip.inAt === undefined && " (berjalan)"}</td>
                       <td className="py-3">
                         <span className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${trip.inAt === undefined ? "bg-warning/20 text-foreground" : "bg-success/15 text-success"}`}>
                           {trip.inAt === undefined ? "Sedang Berjalan" : "Selesai"}
@@ -269,7 +273,7 @@ function App() {
                   ))}
                   {tripTerbaru.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                      <td colSpan={8} className="py-8 text-center text-muted-foreground">
                         Belum ada perjalanan pada rentang waktu ini.
                       </td>
                     </tr>
