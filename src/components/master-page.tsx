@@ -5,7 +5,7 @@ import { useFleet } from "@/components/fleet-provider";
 
 export type MasterKind = "kendaraan" | "driver" | "area-kerja" | "user";
 const titles = { kendaraan: "Kendaraan", driver: "Driver", "area-kerja": "Wilayah Kerja", user: "User" };
-const empty = { nama: "", bidang: "", nopol: "", merk: "", driver: "", area: "", admin: "", odo: "", kml: "" };
+const empty = { nama: "", bidang: "", nopol: "", merk: "", driver: "", area: "", admin: "", odo: "", kml: "", username: "", password: "", role: "Security" };
 const inp = "w-full rounded-lg border bg-background px-3 py-2 text-sm";
 export function MasterPage({ kind }: { kind: MasterKind }) {
   const { kend, setKend, trips, drivers, setDrivers, areas, setAreas, users, setUsers, upsertVehicle, editDriver, editArea, editUser } = useFleet();
@@ -15,9 +15,9 @@ export function MasterPage({ kind }: { kind: MasterKind }) {
   const [editing, setEditing] = useState<string | null>(null);
   const title = titles[kind];
   const field = (label: string, key: keyof typeof empty, required = true, type = "text") => <label className="space-y-1 text-sm font-semibold"><span>{label}</span><input aria-label={label} className={inp} required={required} type={type} min={type === "number" ? (key === "kml" ? "0.01" : "0") : undefined} step={type === "number" ? "any" : undefined} value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} /></label>;
-  const select = (label: string, key: "driver" | "area" | "admin", values: string[]) => <label className="space-y-1 text-sm font-semibold"><span>{label}</span><select aria-label={label} className={inp} value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })}><option value="">—</option>{values.map(v => <option key={v}>{v}</option>)}</select></label>;
-  const rows: string[][] = kind === "kendaraan" ? kend.map(k => [k.nopol, k.merk, k.driver || "—", k.area || "—", k.admin || "—", k.odo?.toLocaleString("id-ID") ?? "—", k.kml === null ? "—" : `${k.kml.toLocaleString("id-ID")} km/L`, k.status]) : kind === "driver" ? drivers.map(d => [d.nama, d.wilayah || "—", kend.filter(k => k.driver === d.nama).map(k => k.nopol).join(" · ") || "—", trips.some(t => t.driver === d.nama && !t.inAt) ? "Sedang bertugas" : "Siap"]) : kind === "area-kerja" ? areas.map(a => [a, [...new Set(kend.filter(k => k.area === a).map(k => k.admin).filter(Boolean))].join(", ") || "—", String(kend.filter(k => k.area === a).length)]) : users.map(u => [u.nama, u.bidang || "—", kend.some(k => k.admin === u.nama) ? "Admin kendaraan" : "User"]);
-  const headers = kind === "kendaraan" ? ["No. Polisi", "Kendaraan", "Driver", "Wilayah Kerja", "Admin", "Odometer (KM)", "Efisiensi BBM (KM/L)", "Status"] : kind === "driver" ? ["Nama Driver", "Wilayah Kerja", "Kendaraan", "Status"] : kind === "area-kerja" ? ["Wilayah Kerja", "Admin", "Kendaraan"] : ["Nama User", "Bidang", "Penugasan"];
+  const select = (label: string, key: "driver" | "area" | "admin" | "role", values: string[]) => <label className="space-y-1 text-sm font-semibold"><span>{label}</span><select aria-label={label} className={inp} value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })}><option value="">—</option>{values.map(v => <option key={v}>{v}</option>)}</select></label>;
+  const rows: string[][] = kind === "kendaraan" ? kend.map(k => [k.nopol, k.merk, k.driver || "—", k.area || "—", k.admin || "—", k.odo?.toLocaleString("id-ID") ?? "—", k.kml === null ? "—" : `${k.kml.toLocaleString("id-ID")} km/L`, k.status]) : kind === "driver" ? drivers.map(d => [d.nama, d.wilayah || "—", kend.filter(k => k.driver === d.nama).map(k => k.nopol).join(" · ") || "—", trips.some(t => t.driver === d.nama && !t.inAt) ? "Sedang bertugas" : "Siap"]) : kind === "area-kerja" ? areas.map(a => [a, [...new Set(kend.filter(k => k.area === a).map(k => k.admin).filter(Boolean))].join(", ") || "—", String(kend.filter(k => k.area === a).length)]) : users.map(u => [u.nama, u.bidang || "—", u.username, u.role, kend.some(k => k.admin === u.nama) ? "Admin kendaraan" : "—"]);
+  const headers = kind === "kendaraan" ? ["No. Polisi", "Kendaraan", "Driver", "Wilayah Kerja", "Admin", "Odometer (KM)", "Efisiensi BBM (KM/L)", "Status"] : kind === "driver" ? ["Nama Driver", "Wilayah Kerja", "Kendaraan", "Status"] : kind === "area-kerja" ? ["Wilayah Kerja", "Admin", "Kendaraan"] : ["Nama User", "Bidang", "Username", "Role", "Penugasan"];
   const startEdit = (value: string) => {
     let next = { ...empty, nama: value };
     if (kind === "kendaraan") {
@@ -27,7 +27,8 @@ export function MasterPage({ kind }: { kind: MasterKind }) {
     } else if (kind === "driver") {
       next.area = drivers.find((d) => d.nama === value)?.wilayah ?? "";
     } else if (kind === "user") {
-      next.bidang = users.find(u => u.nama === value)?.bidang ?? "";
+      const u = users.find(x => x.nama === value);
+      next = { ...next, bidang: u?.bidang ?? "", username: u?.username ?? "", password: u?.password ?? "", role: u?.role ?? "Security" };
     }
     setForm(next); setEditing(value); setError(""); setOpen(true);
     window.scrollTo({ top: 0, behavior: "auto" });
@@ -45,11 +46,14 @@ export function MasterPage({ kind }: { kind: MasterKind }) {
         } else if (kind === "area-kerja") {
           if (editing === null) setAreas(old => [...old, name]); else editArea(editing, name);
         } else {
-          const user = { nama: name, bidang: form.bidang.trim() };
+          const username = form.username.trim().toLowerCase();
+          const editedUsername = users.find(u => u.nama === editing)?.username;
+          if (!username || !form.password || users.some(u => u.username !== editedUsername && u.username === username)) { setError("Username sudah dipakai atau password belum diisi."); return; }
+          const user = { nama: name, bidang: form.bidang.trim(), username, password: form.password, role: form.role === "Admin" ? "Admin" as const : "Security" as const };
           if (editing === null) setUsers(old => [...old, user]); else editUser(editing, user);
         }
         setForm(empty); setEditing(null); setOpen(false); setError("");
-      }}><div className="grid gap-4 sm:grid-cols-2">{kind === "kendaraan" ? <>{field("No. Polisi", "nopol")}{field("Merk / tipe kendaraan", "merk")}{select("Driver", "driver", drivers.map(d => d.nama))}{select("Wilayah Kerja", "area", areas)}{select("Admin", "admin", users.map(u => u.nama))}{field("Odometer (KM)", "odo", false, "number")}{field("Efisiensi BBM (KM/L)", "kml", false, "number")}</> : <>{field(kind === "driver" ? "Nama Driver" : kind === "area-kerja" ? "Nama Wilayah Kerja" : "Nama User", "nama")}{kind === "driver" && select("Wilayah Kerja", "area", areas)}{kind === "user" && field("Bidang", "bidang")}</>}</div>{error && <p role="alert" className="mt-3 text-sm text-destructive">{error}</p>}<div className="mt-4 flex gap-2"><Button type="submit">{editing === null ? "Tambah" : "Simpan Perubahan"}</Button><Button type="button" variant="outline" onClick={() => setOpen(false)}>Batal</Button></div></form>
+      }}><div className="grid gap-4 sm:grid-cols-2">{kind === "kendaraan" ? <>{field("No. Polisi", "nopol")}{field("Merk / tipe kendaraan", "merk")}{select("Driver", "driver", drivers.map(d => d.nama))}{select("Wilayah Kerja", "area", areas)}{select("Admin", "admin", users.map(u => u.nama))}{field("Odometer (KM)", "odo", false, "number")}{field("Efisiensi BBM (KM/L)", "kml", false, "number")}</> : <>{field(kind === "driver" ? "Nama Driver" : kind === "area-kerja" ? "Nama Wilayah Kerja" : "Nama User", "nama")}{kind === "driver" && select("Wilayah Kerja", "area", areas)}{kind === "user" && <>{field("Bidang", "bidang", false)}{field("Username", "username")}{field("Password", "password")}{select("Role", "role", ["Admin", "Security"])}</>}</>}</div>{error && <p role="alert" className="mt-3 text-sm text-destructive">{error}</p>}<div className="mt-4 flex gap-2"><Button type="submit">{editing === null ? "Tambah" : "Simpan Perubahan"}</Button><Button type="button" variant="outline" onClick={() => setOpen(false)}>Batal</Button></div></form>
     </section>}
     <p className="mb-3 text-sm text-muted-foreground">{rows.length} {title.toLowerCase()}</p>
     <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead className="text-muted-foreground"><tr>{headers.map(h => <th key={h} className="whitespace-nowrap py-3 pr-6">{h}</th>)}<th className="py-3">Edit</th></tr></thead><tbody>{rows.map((row, i) => <tr key={row[0] ?? i} className="border-t align-top">{row.map((cell, j) => <td key={j} className={`py-3 pr-6 ${j === 0 ? "font-semibold" : ""}`}>{cell}</td>)}<td className="py-2"><Button variant="ghost" size="icon" aria-label={`Edit ${row[0]}`} title={`Edit ${row[0]}`} onClick={() => { const value = row[0]; if (value !== undefined) startEdit(value); }}><Pencil /></Button></td></tr>)}</tbody></table>{rows.length === 0 && <p className="border-y py-12 text-center text-sm text-muted-foreground">Belum ada data.</p>}</div>

@@ -4,6 +4,7 @@ import { Download, Pencil, Route as RouteIcon } from "lucide-react";
 import { createGuestReportBlob, createReportBlob, deliverReport } from "@/lib/report-export";
 import { type Trip } from "@/lib/vehicle-data";
 import { useFleet } from "@/components/fleet-provider";
+import { UserBadge } from "@/components/auth-gate";
 import { MasterNav } from "@/components/master-nav";
 import { isCheckoutValid, isCheckinValid, isGuestCheckoutValid, isGuestCheckinValid, type TipeKendaraan } from "@/lib/checkout";
 import { dashboardTripRows, inRange, rangeBounds, timeRangePresets, type TimeRangePreset } from "@/lib/dashboard-filter";
@@ -58,7 +59,7 @@ function Steps({ items, active }: { items: string[]; active: number }) {
 
 function App() {
   const [menu, setMenu] = useState<Menu>("Dashboard");
-  const { kend, setKend, trips, setTrips, drivers, users, areas } = useFleet();
+  const { kend, setKend, trips, setTrips, drivers, users, areas, currentUser } = useFleet();
   const [msg, setMsg] = useState("");
   const [reportBlob, setReportBlob] = useState<Blob | null>(null);
   const [reportError, setReportError] = useState("");
@@ -180,8 +181,8 @@ function App() {
             </Button>
           ))}
         </nav>
-        <MasterNav />
-        <ServiceNav />
+        {currentUser?.role === "Admin" && <><MasterNav /><ServiceNav /></>}
+        <UserBadge />
       </aside>
 
       <main className="min-w-0 flex-1 p-5 md:p-8">
