@@ -74,6 +74,7 @@ function App() {
 
   const aktif = trips.filter((t) => !t.inAt);
   const selesai = trips.filter((t) => t.inAt);
+  const selesaiDinas = selesai.filter((t) => t.tipe !== "tamu");
 
   // Filter dashboard per wilayah kerja & rentang waktu
   const [areaFilter, setAreaFilter] = useState("Semua");
@@ -84,7 +85,7 @@ function App() {
   const areaOf = (nopol: string) => kend.find((k) => k.nopol === nopol)?.area;
   const kendF = areaFilter === "Semua" ? kend : kend.filter((k) => k.area === areaFilter);
   const dalamRentang = (t: Trip) => inRange(t.outAt, waktuBounds);
-  const selesaiF = (areaFilter === "Semua" ? selesai : selesai.filter((t) => areaOf(t.nopol) === areaFilter)).filter(dalamRentang);
+  const selesaiF = (areaFilter === "Semua" ? selesaiDinas : selesaiDinas.filter((t) => areaOf(t.nopol) === areaFilter)).filter(dalamRentang);
   const tripTerbaru = dashboardTripRows(trips.filter((trip) => trip.tipe !== "tamu"), areaOf, areaFilter, waktuBounds);
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(""), 3500); };
 
@@ -145,7 +146,7 @@ function App() {
   // Data grafik per wilayah kerja
   const grafikArea = areas.map((a) => {
     const kA = kend.filter((k) => k.area === a);
-    const tA = selesai.filter((t) => areaOf(t.nopol) === a && dalamRentang(t));
+    const tA = selesaiDinas.filter((t) => areaOf(t.nopol) === a && dalamRentang(t));
     return {
       area: a,
       total: kA.length,
