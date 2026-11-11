@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Download, Route as RouteIcon } from "lucide-react";
+import { Download, Pencil, Route as RouteIcon } from "lucide-react";
 import { createGuestReportBlob, createReportBlob, deliverReport } from "@/lib/report-export";
 import { type Trip } from "@/lib/vehicle-data";
 import { useFleet } from "@/components/fleet-provider";
@@ -478,7 +478,7 @@ function App() {
                 <Button type="button" size="sm" variant="outline" onClick={() => setEditOdo(String(tSel.odoOut))}><Pencil size={14} />Edit</Button>
               </>}</div>}
               {tSel && <p className="mt-1 text-xs text-muted-foreground">
-                {Number(ci.odo) > tSel.odoOut && <> · jarak tempuh <b>{(Number(ci.odo) - tSel.odoOut).toLocaleString("id-ID")} KM</b></>}</p>}
+                {Number(ci.odo) > tSel.odoOut && <>Jarak tempuh <b>{(Number(ci.odo) - tSel.odoOut).toLocaleString("id-ID")} KM</b></>}</p>}
             </div>
             <div>
               <p className="mb-2 text-sm font-bold">Foto odometer saat kembali</p>
