@@ -85,7 +85,7 @@ function App() {
   const kendF = areaFilter === "Semua" ? kend : kend.filter((k) => k.area === areaFilter);
   const dalamRentang = (t: Trip) => inRange(t.outAt, waktuBounds);
   const selesaiF = (areaFilter === "Semua" ? selesai : selesai.filter((t) => areaOf(t.nopol) === areaFilter)).filter(dalamRentang);
-  const tripTerbaru = dashboardTripRows(trips, areaOf, areaFilter, waktuBounds);
+  const tripTerbaru = dashboardTripRows(trips.filter((trip) => trip.tipe !== "tamu"), areaOf, areaFilter, waktuBounds);
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(""), 3500); };
 
   // Check-out form
