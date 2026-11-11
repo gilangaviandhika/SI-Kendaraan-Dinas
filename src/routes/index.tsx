@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Download, Route as RouteIcon } from "lucide-react";
+import { Download, Pencil, Route as RouteIcon } from "lucide-react";
 import { createGuestReportBlob, createReportBlob, deliverReport } from "@/lib/report-export";
 import { type Trip } from "@/lib/vehicle-data";
 import { useFleet } from "@/components/fleet-provider";
@@ -113,6 +113,7 @@ function App() {
   // Check-in form
   const [ci, setCi] = useState({ id: 0, satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan", user: "", bidang: "" });
   const tSel = trips.find((t) => t.id === ci.id);
+  const [editOdo, setEditOdo] = useState<string | null>(null);
   const ciValid = tSel?.tipe === "tamu" ? isGuestCheckinValid(ci, tSel) : isCheckinValid(ci, tSel);
   const submitIn = () => {
     if (!ciValid || !tSel) return;
@@ -414,7 +415,7 @@ function App() {
             {!tamu && <>
             <div>
               <p className="mb-1 text-sm font-bold">🧭 Odometer saat berangkat (KM)</p>
-              <input aria-label="Odometer saat berangkat (KM)" type="number" className={inp} value={co.odo} onChange={(e) => setCo({ ...co, odo: e.target.value })} />
+              <input aria-label="Odometer saat berangkat (KM)" type="number" className={inp + " max-w-[200px]"} value={co.odo} onChange={(e) => setCo({ ...co, odo: e.target.value })} />
               {kSel && <p className="mt-1 text-xs text-muted-foreground">Odometer terakhir tercatat: {kSel.odo === null ? "Belum tersedia" : `${kSel.odo.toLocaleString("id-ID")} KM`}</p>}
             </div>
             <div>
@@ -466,9 +467,18 @@ function App() {
             {!tamu && <>
             <div>
               <p className="mb-1 text-sm font-bold">🧭 Odometer akhir (KM)</p>
-              <input type="number" className={inp} value={ci.odo} onChange={(e) => setCi({ ...ci, odo: e.target.value })} />
-              {tSel && <p className="mt-1 text-xs text-muted-foreground">Odometer saat berangkat: {tSel.odoOut.toLocaleString("id-ID")} KM
-                {Number(ci.odo) > tSel.odoOut && <> · jarak tempuh <b>{(Number(ci.odo) - tSel.odoOut).toLocaleString("id-ID")} KM</b></>}</p>}
+              <input aria-label="Odometer akhir (KM)" type="number" className={inp + " max-w-[200px]"} value={ci.odo} onChange={(e) => setCi({ ...ci, odo: e.target.value })} />
+              {tSel && <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">{editOdo !== null ? <>
+                <span>Odometer saat berangkat:</span>
+                <input aria-label="Revisi odometer berangkat (KM)" type="number" className={inp + " max-w-[140px] py-1"} value={editOdo} onChange={(e) => setEditOdo(e.target.value)} />
+                <Button type="button" size="sm" disabled={editOdo === "" || Number(editOdo) < 0} onClick={() => { const v = Number(editOdo); setTrips((t) => t.map((x) => (x.id === tSel.id ? { ...x, odoOut: v } : x))); setEditOdo(null); }}>Simpan</Button>
+                <Button type="button" size="sm" variant="outline" onClick={() => setEditOdo(null)}>Batal</Button>
+              </> : <>
+                <span>Odometer saat berangkat: {tSel.odoOut.toLocaleString("id-ID")} KM</span>
+                <Button type="button" size="sm" variant="outline" onClick={() => setEditOdo(String(tSel.odoOut))}><Pencil size={14} />Edit</Button>
+              </>}</div>}
+              {tSel && <p className="mt-1 text-xs text-muted-foreground">
+                {Number(ci.odo) > tSel.odoOut && <>Jarak tempuh <b>{(Number(ci.odo) - tSel.odoOut).toLocaleString("id-ID")} KM</b></>}</p>}
             </div>
             <div>
               <p className="mb-2 text-sm font-bold">Foto odometer saat kembali</p>
