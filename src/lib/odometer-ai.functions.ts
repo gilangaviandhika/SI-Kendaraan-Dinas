@@ -24,7 +24,10 @@ export const readOdometerAI = createServerFn({ method: "POST" })
           },
         ],
       });
-      const text = String((res as { output_text?: string }).output_text ?? "");
+      const text = res.output
+        .flatMap((o) => (o.type === "message" ? o.content : []))
+        .map((c) => (c.type === "output_text" ? c.text : ""))
+        .join(" ");
       const m = text.replace(/[.,](?=\d{3}\b)/g, "").match(/\d{1,7}/);
       return { odo: m ? m[0].replace(/^0+(?=\d)/, "") : null };
     } catch (e) {
