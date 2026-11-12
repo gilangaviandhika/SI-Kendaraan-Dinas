@@ -10,6 +10,7 @@ import { isCheckoutValid, isCheckinValid, isGuestCheckoutValid, isGuestCheckinVa
 import { dashboardTripRows, inRange, rangeBounds, timeRangePresets, type TimeRangePreset } from "@/lib/dashboard-filter";
 import { ServiceNav } from "@/components/service-nav";
 import { Button } from "@/components/ui/button";
+import { scanOdometer } from "@/lib/odometer-ocr";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -38,12 +39,12 @@ const Card = ({ children, className = "" }: { children: React.ReactNode; classNa
 const inp = "w-full rounded-lg border bg-background px-3 py-2 text-sm";
 const btn = "rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-40";
 
-function Foto({ label, value, onChange }: { label: string; value?: string | undefined; onChange: (u: string) => void }) {
+function Foto({ label, value, onChange, onFile }: { label: string; value?: string | undefined; onChange: (u: string) => void; onFile?: (f: File) => void }) {
   return (
     <label className="flex cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-xl border-2 border-dashed bg-muted/40 p-2 text-xs text-muted-foreground h-28">
       {value ? <img src={value} alt={label} className="h-full w-full object-cover rounded-lg" /> : <><span className="text-2xl">📷</span>{label}</>}
       <input type="file" accept="image/*" capture="environment" className="hidden"
-        onChange={(e) => { const f = e.target.files?.[0]; if (f) onChange(URL.createObjectURL(f)); }} />
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) { onChange(URL.createObjectURL(f)); onFile?.(f); } }} />
     </label>
   );
 }
@@ -61,6 +62,18 @@ function App() {
   const [menu, setMenu] = useState<Menu>("Dashboard");
   const { kend, setKend, trips, setTrips, drivers, users, areas, currentUser } = useFleet();
   const [msg, setMsg] = useState("");
+  const [scan, setScan] = useState<{ which: "out" | "in"; state: "busy" | "ok" | "fail" } | null>(null);
+  const [editOdoIn, setEditOdoIn] = useState(false);
+  const runScan = async (which: "out" | "in", f: File) => {
+    setScan({ which, state: "busy" });
+    try {
+      const n = await scanOdometer(f);
+      if (!n) return setScan({ which, state: "fail" });
+      if (which === "out") setCo((c) => ({ ...c, odo: n })); else { setCi((c) => ({ ...c, odo: n })); setEditOdoIn(false); }
+      setScan({ which, state: "ok" });
+    } catch { setScan({ which, state: "fail" }); }
+  };
+  const scanNote = (which: "out" | "in") => scan?.which === which && <p className="mt-1 text-xs text-muted-foreground" role="status">{scan.state === "busy" ? "Membaca angka dari foto odometer…" : scan.state === "ok" ? "Angka terbaca otomatis dari foto. Tekan Edit bila tidak sesuai." : "Angka tidak terbaca dari foto, silakan isi manual."}</p>;
   const [reportBlob, setReportBlob] = useState<Blob | null>(null);
   const [reportError, setReportError] = useState("");
   const [reportTab, setReportTab] = useState<TipeKendaraan>("dinas");
@@ -428,11 +441,11 @@ function App() {
             <div>
               <p className="mb-1 text-sm font-bold">🧭 Odometer saat berangkat (KM)</p>
               <div className="flex items-center gap-2"><input aria-label="Odometer saat berangkat (KM)" type="number" readOnly={!!kSel && kSel.odo !== null && editOdo === null} className={inp + " max-w-[200px] read-only:bg-muted"} value={co.odo} onChange={(e) => setCo({ ...co, odo: e.target.value })} />{kSel && kSel.odo !== null && (editOdo === null ? <Button type="button" size="sm" variant="outline" onClick={() => setEditOdo(co.odo)}><Pencil size={14} />Edit</Button> : <><Button type="button" size="sm" onClick={() => setEditOdo(null)}>Simpan</Button><Button type="button" size="sm" variant="outline" onClick={() => { setCo({ ...co, odo: editOdo }); setEditOdo(null); }}>Batal</Button></>)}</div>
-              {kSel && <p className="mt-1 text-xs text-muted-foreground">Odometer terakhir tercatat: {kSel.odo === null ? "Belum tersedia" : `${kSel.odo.toLocaleString("id-ID")} KM`}</p>}
+              {scanNote("out")}{kSel && <p className="mt-1 text-xs text-muted-foreground">Odometer terakhir tercatat: {kSel.odo === null ? "Belum tersedia" : `${kSel.odo.toLocaleString("id-ID")} KM`}</p>}
             </div>
             <div>
               <p className="mb-2 text-sm font-bold">Foto odometer saat berangkat</p>
-              <div className="max-w-md"><Foto label="Foto odometer" value={co.fotoOdo} onChange={(u) => setCo({ ...co, fotoOdo: u })} /></div>
+              <div className="max-w-md"><Foto label="Foto odometer" value={co.fotoOdo} onChange={(u) => setCo({ ...co, fotoOdo: u })} onFile={(f) => void runScan("out", f)} /></div>
             </div>
             </>}
             <div>
@@ -479,14 +492,14 @@ function App() {
             {!tamu && <>
             <div>
               <p className="mb-1 text-sm font-bold">🧭 Odometer akhir (KM)</p>
-              <input aria-label="Odometer akhir (KM)" type="number" className={inp + " max-w-[200px]"} value={ci.odo} onChange={(e) => setCi({ ...ci, odo: e.target.value })} />
+              <div className="flex items-center gap-2"><input aria-label="Odometer akhir (KM)" type="number" readOnly={scan?.which === "in" && scan.state === "ok" && !!ci.odo && !editOdoIn} className={inp + " max-w-[200px] read-only:bg-muted"} value={ci.odo} onChange={(e) => setCi({ ...ci, odo: e.target.value })} />{scan?.which === "in" && scan.state === "ok" && !!ci.odo && (editOdoIn ? <Button type="button" size="sm" onClick={() => setEditOdoIn(false)}>Simpan</Button> : <Button type="button" size="sm" variant="outline" onClick={() => setEditOdoIn(true)}><Pencil size={14} />Edit</Button>)}</div>{scanNote("in")}
               {tSel && <p className="mt-2 text-xs text-muted-foreground">Odometer saat berangkat: {tSel.odoOut.toLocaleString("id-ID")} KM</p>}
               {tSel && <p className="mt-1 text-xs text-muted-foreground">
                 {Number(ci.odo) > tSel.odoOut && <>Jarak tempuh <b>{(Number(ci.odo) - tSel.odoOut).toLocaleString("id-ID")} KM</b></>}</p>}
             </div>
             <div>
               <p className="mb-2 text-sm font-bold">Foto odometer saat kembali</p>
-              <div className="max-w-md"><Foto label="Foto odometer" value={ci.fotoOdo} onChange={(u) => setCi({ ...ci, fotoOdo: u })} /></div>
+              <div className="max-w-md"><Foto label="Foto odometer" value={ci.fotoOdo} onChange={(u) => setCi({ ...ci, fotoOdo: u })} onFile={(f) => void runScan("in", f)} /></div>
             </div>
             </>}
             <div>
