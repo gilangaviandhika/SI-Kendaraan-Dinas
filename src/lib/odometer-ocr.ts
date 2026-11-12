@@ -1,6 +1,6 @@
 /** Pick the most likely odometer reading (longest digit run, 3–7 digits) from OCR text. */
 export function pickOdometer(text: string): string | null {
-  const runs = (text.replace(/[\s.,]/g, (c) => (c === "\n" ? " " : "")).match(/\d{3,7}/g) ?? []);
+  const runs = (text.replace(/(\d)[.,](?=\d)/g, "$1").match(/\d{3,7}/g) ?? []);
   if (!runs.length) return null;
   return runs.reduce((a, b) => (b.length > a.length ? b : a)).replace(/^0+(?=\d)/, "");
 }
