@@ -333,12 +333,13 @@ function App() {
                             <td className="py-3 pr-4 font-semibold">{t.nopol}</td>
                             <td className="py-3 pr-4">{t.user || "—"}<span className="block text-xs text-muted-foreground">{t.bidang || "—"}</span></td>
                             <td className="py-3 pr-4">{t.tujuan || "—"}</td>
+                            <td className="py-3 pr-4">{t.lokasi || "—"}</td>
                             <td className="py-3 pr-4">{fmtWaktu(t.outAt)}</td>
                             <td className="py-3 pr-4">{fmtDur(Date.now() - t.outAt)}</td>
                             <td className="py-3"><Button size="sm" variant="outline" onClick={() => { setTipe("tamu"); setCi({ ...ci, id: t.id, user: t.user ?? "", bidang: t.bidang ?? "" }); setMenu("Check-Out"); }}>Check-Out</Button></td>
                           </tr>
                         ))}
-                        {tamuAktif.length === 0 && <tr><td colSpan={6} className="py-8 text-center text-muted-foreground">Saat ini tidak ada tamu yang sedang berkunjung.</td></tr>}
+                        {tamuAktif.length === 0 && <tr><td colSpan={7} className="py-8 text-center text-muted-foreground">Saat ini tidak ada tamu yang sedang berkunjung.</td></tr>}
                       </tbody>
                     </table>
                   </Card>
@@ -471,7 +472,7 @@ function App() {
               <Card key={t.id} className="flex flex-wrap items-center justify-between gap-3 border-warning/50">
                 <div>
                   <p className="font-bold">🚗 {t.nopol} · <span className="text-primary">{t.driver}</span></p>
-                  <p className="text-sm">{t.tipe === "tamu" ? <>Kendaraan Tamu · Nama Tamu: {t.user || "—"} · Instansi: {t.bidang || "—"}</> : <>User: {t.user || "—"} · Bidang: {t.bidang || "—"}</>}</p>
+                  <p className="text-sm">{t.tipe === "tamu" ? <>Kendaraan Tamu · Nama Tamu: {t.user || "—"} · Instansi: {t.bidang || "—"} · Lokasi: {t.lokasi || "—"}</> : <>User: {t.user || "—"} · Bidang: {t.bidang || "—"}</>}</p>
                   <p className="text-sm text-muted-foreground">{t.tujuan} — keluar {fmtWaktu(t.outAt)}{t.tipe !== "tamu" && <> · odometer {t.odoOut.toLocaleString("id-ID")} KM</>}</p>
                 </div>
                 <button className={btn} onClick={() => { setTipe(t.tipe === "tamu" ? "tamu" : "dinas"); setCi({ ...ci, id: t.id, user: t.user ?? "", bidang: t.bidang ?? "" }); setMenu(t.tipe === "tamu" ? "Check-Out" : "Check-In"); }}>{t.tipe === "tamu" ? "Check-Out" : "Check-In"}</button>
