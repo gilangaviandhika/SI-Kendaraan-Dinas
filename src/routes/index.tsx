@@ -1,3 +1,4 @@
+import { prepareOdometerImage } from "@/lib/odometer-ocr";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Download, Pencil, Route as RouteIcon } from "lucide-react";
@@ -43,8 +44,8 @@ function Foto({ label, value, onChange, onFile }: { label: string; value?: strin
   return (
     <label className="flex cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-xl border-2 border-dashed bg-muted/40 p-2 text-xs text-muted-foreground h-28">
       {value ? <img src={value} alt={label} className="h-full w-full object-cover rounded-lg" /> : <><span className="text-2xl">📷</span>{label}</>}
-      <input type="file" accept="image/*" capture="environment" className="hidden"
-        onChange={(e) => { const f = e.target.files?.[0]; if (f) { onChange(URL.createObjectURL(f)); onFile?.(f); } }} />
+      <input type="file" accept="image/*" className="hidden"
+        onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) { onFile?.(f); void prepareOdometerImage(f).then(onChange).catch(() => onChange(URL.createObjectURL(f))); } }} />
     </label>
   );
 }
