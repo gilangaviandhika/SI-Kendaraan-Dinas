@@ -18,5 +18,5 @@
 - [x] Pindahkan Trip Terbaru ke atas grafik Kendaraan per Wilayah Kerja
 - [x] Login sementara admin/admin dilepas atas permintaan pengguna
 - [x] Login mockup dengan peran Admin dan Security
-- [ ] Perbaiki pemulihan sesi setelah kamera HP dan ringankan foto odometer; uji sesi serta alur foto
+- [x] Perbaiki pemulihan sesi setelah kamera HP dan ringankan foto odometer; uji sesi serta alur foto
 - [ ] Simpan data & foto ke database
