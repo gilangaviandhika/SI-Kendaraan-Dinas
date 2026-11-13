@@ -33,11 +33,15 @@ describe("Foto odometer saat Check-In", () => {
   });
 });
 describe("Kendaraan tamu", () => {
-  const g = { nopol: "D 1 X", tujuan: "Rapat", user: "Tamu A", bidang: "PLN UID", foto: ["d", "b"] };
+  const g = { nopol: "D 1 X", tujuan: "Rapat", user: "Tamu A", bidang: "PLN UID", lokasi: "UPT BANDUNG", foto: ["d", "b"] };
   it("check-out tamu tidak memerlukan odometer, tetapi wajib nama tamu dan instansi", () => {
     expect(isGuestCheckoutValid(g)).toBe(true);
     expect(isGuestCheckoutValid({ ...g, user: " " })).toBe(false);
     expect(isGuestCheckoutValid({ ...g, bidang: "" })).toBe(false);
+  });
+  it("check-out tamu wajib memilih lokasi kunjungan", () => {
+    expect(isGuestCheckoutValid({ ...g, lokasi: "" })).toBe(false);
+    expect(isGuestCheckoutValid({ ...g, lokasi: " " })).toBe(false);
   });
   it("check-in tamu tanpa odometer", () => {
     const t: Trip = { ...trip, tipe: "tamu" };

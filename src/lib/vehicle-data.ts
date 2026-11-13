@@ -9,6 +9,7 @@ export type Trip = {
   satpamIn?: string; inAt?: number; odoIn?: number; fotoOdoIn?: string; fotoIn?: string[]; kondisi?: string;
   user?: string; bidang?: string;
   tipe?: "dinas" | "tamu";
+  lokasi?: string;
 };
 
 // Source: DATA_DRIVER_1.xlsx, DRIVER sheet. Odometer was not supplied.

@@ -106,21 +106,21 @@ function App() {
   // Check-out form
   const [tipe, setTipe] = useState<TipeKendaraan>("dinas");
   const tamu = tipe === "tamu";
-  const [co, setCo] = useState({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""] });
+  const [co, setCo] = useState({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", lokasi: "", satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""] });
   const kSel = kend.find((k) => k.nopol === co.nopol);
   const coValid = tamu ? isGuestCheckoutValid(co) : isCheckoutValid(co, kSel);
   const submitOut = () => {
     if (!coValid) return;
     if (tamu) {
-      setTrips((t) => [{ id: Date.now(), tipe: "tamu", nopol: co.nopol.trim(), driver: co.user.trim(), tujuan: co.tujuan, user: co.user.trim(), bidang: co.bidang.trim(), satpamOut: co.satpam, outAt: Date.now(), odoOut: 0, fotoOut: co.foto }, ...t]);
-      setCo({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""] });
+      setTrips((t) => [{ id: Date.now(), tipe: "tamu", nopol: co.nopol.trim(), driver: co.user.trim(), tujuan: co.tujuan, user: co.user.trim(), bidang: co.bidang.trim(), lokasi: co.lokasi, satpamOut: co.satpam, outAt: Date.now(), odoOut: 0, fotoOut: co.foto }, ...t]);
+      setCo({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", lokasi: "", satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""] });
       flash("Kedatangan tamu tercatat (Check-In). Proses Check-Out saat tamu keluar.");
       setMenu("Dalam Perjalanan");
       return;
     }
     setTrips((t) => [{ id: Date.now(), tipe: "dinas", nopol: co.nopol, driver: co.driver, tujuan: co.tujuan, user: co.user.trim(), bidang: co.bidang.trim(), satpamOut: co.satpam, outAt: Date.now(), odoOut: Number(co.odo), fotoOdoOut: co.fotoOdo, fotoOut: co.foto }, ...t]);
     setKend((ks) => ks.map((k) => (k.nopol === co.nopol ? { ...k, status: "Digunakan" } : k)));
-    setCo({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""] });
+    setCo({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", lokasi: "", satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""] });
     flash("Check-out tercatat. Kendaraan kini berstatus Digunakan.");
     setMenu("Dalam Perjalanan");
   };
@@ -303,14 +303,14 @@ function App() {
               </table>
             </Card>
             {(() => {
-              const tamuAll = trips.filter((t) => t.tipe === "tamu");
+              const tamuAll = trips.filter((t) => t.tipe === "tamu" && (areaFilter === "Semua" || t.lokasi === areaFilter));
               const tamuAktif = tamuAll.filter((t) => !t.inAt).sort((a, b) => a.outAt - b.outAt);
               const tamuRentang = tamuAll.filter(dalamRentang);
               const tamuSelesai = tamuRentang.filter((t) => t.inAt);
               const rata = tamuSelesai.length ? tamuSelesai.reduce((s, t) => s + durasi(t), 0) / tamuSelesai.length : 0;
               return (
                 <div className="space-y-4">
-                  <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Ringkasan Kendaraan Tamu</h3>
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Ringkasan Kendaraan Tamu{areaFilter !== "Semua" && ` — ${areaFilter}`}</h3>
                   <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                     {[
                       { l: "Tamu Sedang Berkunjung", v: String(tamuAktif.length), c: "text-warning" },
@@ -325,7 +325,7 @@ function App() {
                     <h3 className="mb-3 font-bold">Tamu Sedang Berkunjung</h3>
                     <table aria-label="Tamu sedang berkunjung" className="w-full min-w-[48rem] text-sm">
                       <thead className="text-left text-muted-foreground">
-                        <tr><th className="py-2 pr-4">Nomor Polisi</th><th className="py-2 pr-4">Nama Tamu / Instansi</th><th className="py-2 pr-4">Keperluan</th><th className="py-2 pr-4">Jam Masuk</th><th className="py-2 pr-4">Lama Berkunjung</th><th className="py-2">Aksi</th></tr>
+                        <tr><th className="py-2 pr-4">Nomor Polisi</th><th className="py-2 pr-4">Nama Tamu / Instansi</th><th className="py-2 pr-4">Keperluan</th><th className="py-2 pr-4">Lokasi Kunjungan</th><th className="py-2 pr-4">Jam Masuk</th><th className="py-2 pr-4">Lama Berkunjung</th><th className="py-2">Aksi</th></tr>
                       </thead>
                       <tbody>
                         {tamuAktif.map((t) => (
@@ -333,12 +333,13 @@ function App() {
                             <td className="py-3 pr-4 font-semibold">{t.nopol}</td>
                             <td className="py-3 pr-4">{t.user || "—"}<span className="block text-xs text-muted-foreground">{t.bidang || "—"}</span></td>
                             <td className="py-3 pr-4">{t.tujuan || "—"}</td>
+                            <td className="py-3 pr-4">{t.lokasi || "—"}</td>
                             <td className="py-3 pr-4">{fmtWaktu(t.outAt)}</td>
                             <td className="py-3 pr-4">{fmtDur(Date.now() - t.outAt)}</td>
                             <td className="py-3"><Button size="sm" variant="outline" onClick={() => { setTipe("tamu"); setCi({ ...ci, id: t.id, user: t.user ?? "", bidang: t.bidang ?? "" }); setMenu("Check-Out"); }}>Check-Out</Button></td>
                           </tr>
                         ))}
-                        {tamuAktif.length === 0 && <tr><td colSpan={6} className="py-8 text-center text-muted-foreground">Saat ini tidak ada tamu yang sedang berkunjung.</td></tr>}
+                        {tamuAktif.length === 0 && <tr><td colSpan={7} className="py-8 text-center text-muted-foreground">Saat ini tidak ada tamu yang sedang berkunjung.</td></tr>}
                       </tbody>
                     </table>
                   </Card>
@@ -421,6 +422,10 @@ function App() {
               <label className="space-y-1 text-sm font-semibold"><span>Nomor Polisi</span><input aria-label="Nomor polisi kendaraan tamu" className={inp} placeholder="Contoh: D 1234 AB" value={co.nopol} onChange={(e) => setCo({ ...co, nopol: e.target.value })} /></label>
               <label className="space-y-1 text-sm font-semibold"><span>Nama Tamu</span><input className={inp} placeholder="Nama tamu" value={co.user} onChange={(e) => setCo({ ...co, user: e.target.value })} /></label>
               <label className="space-y-1 text-sm font-semibold"><span>Instansi</span><input className={inp} placeholder="Asal instansi" value={co.bidang} onChange={(e) => setCo({ ...co, bidang: e.target.value })} /></label>
+              <label className="space-y-1 text-sm font-semibold"><span>Lokasi Kunjungan</span><select aria-label="Lokasi kunjungan tamu" className={inp} value={co.lokasi} onChange={(e) => setCo({ ...co, lokasi: e.target.value })}>
+                <option value="">Pilih lokasi kunjungan…</option>
+                {areas.map((a) => <option key={a} value={a}>{a}</option>)}
+              </select></label>
               </> : <>
               <label className="space-y-1 text-sm font-semibold"><span>Kendaraan</span><select aria-label="Kendaraan tersedia" className={inp} value={co.nopol} onChange={(e) => setCo({ ...co, nopol: e.target.value, odo: String(kend.find((k) => k.nopol === e.target.value)?.odo ?? "") })}>
                 <option value="">Pilih kendaraan tersedia…</option>
@@ -467,7 +472,7 @@ function App() {
               <Card key={t.id} className="flex flex-wrap items-center justify-between gap-3 border-warning/50">
                 <div>
                   <p className="font-bold">🚗 {t.nopol} · <span className="text-primary">{t.driver}</span></p>
-                  <p className="text-sm">{t.tipe === "tamu" ? <>Kendaraan Tamu · Nama Tamu: {t.user || "—"} · Instansi: {t.bidang || "—"}</> : <>User: {t.user || "—"} · Bidang: {t.bidang || "—"}</>}</p>
+                  <p className="text-sm">{t.tipe === "tamu" ? <>Kendaraan Tamu · Nama Tamu: {t.user || "—"} · Instansi: {t.bidang || "—"} · Lokasi: {t.lokasi || "—"}</> : <>User: {t.user || "—"} · Bidang: {t.bidang || "—"}</>}</p>
                   <p className="text-sm text-muted-foreground">{t.tujuan} — keluar {fmtWaktu(t.outAt)}{t.tipe !== "tamu" && <> · odometer {t.odoOut.toLocaleString("id-ID")} KM</>}</p>
                 </div>
                 <button className={btn} onClick={() => { setTipe(t.tipe === "tamu" ? "tamu" : "dinas"); setCi({ ...ci, id: t.id, user: t.user ?? "", bidang: t.bidang ?? "" }); setMenu(t.tipe === "tamu" ? "Check-Out" : "Check-In"); }}>{t.tipe === "tamu" ? "Check-Out" : "Check-In"}</button>
