@@ -82,7 +82,7 @@ export async function createGuestReportBlob(trips: Trip[]) {
     if (trip.tipe !== "tamu" || trip.inAt === undefined) continue;
     // Guest flow is reversed: outAt = arrival (Check-In), inAt = departure (Check-Out).
     const row = sheet.addRow({
-      nopol: trip.nopol, user: trip.user ?? "", bidang: trip.bidang ?? "", tujuan: trip.tujuan,
+      nopol: trip.nopol, user: trip.user ?? "", bidang: trip.bidang ?? "", tujuan: trip.tujuan, lokasi: trip.lokasi ?? "",
       masuk: excelDate(trip.outAt), keluar: excelDate(trip.inAt),
       satpamIn: trip.satpamOut, satpamOut: trip.satpamIn ?? "", kondisi: trip.kondisi ?? "",
     });
@@ -90,7 +90,7 @@ export async function createGuestReportBlob(trips: Trip[]) {
     row.getCell("durasi").value = { formula: `(F${n}-E${n})*24`, result: (trip.inAt - trip.outAt) / 3_600_000 };
   }
   sheet.views = [{ state: "frozen", ySplit: 1 }];
-  sheet.autoFilter = { from: "A1", to: `J${Math.max(1, sheet.rowCount)}` };
+  sheet.autoFilter = { from: "A1", to: `K${Math.max(1, sheet.rowCount)}` };
   sheet.eachRow(row => { row.font = { name: "Arial", size: 11 }; row.alignment = { vertical: "top", wrapText: true }; });
   const header = sheet.getRow(1);
   header.font = { name: "Arial", size: 11, bold: true };
