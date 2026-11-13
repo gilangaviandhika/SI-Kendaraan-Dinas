@@ -10,7 +10,7 @@ export function filterRequests(rows: RequestRow[], start: string, end: string) {
 export async function createAdministrationReport(rows: RequestRow[], kind: AdministrationKind) {
   const { Workbook } = await import("exceljs");
   const workbook = new Workbook();
-  workbook.creator = "SI Kendaraan Dinas UPT Bandung";
+  workbook.creator = "GARDU BANDUNG — UPT Bandung";
   const overtime = kind === "overtime";
   const sheet = workbook.addWorksheet(overtime ? "e-Overtime" : "e-SPPD");
   sheet.columns = [

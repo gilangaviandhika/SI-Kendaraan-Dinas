@@ -15,7 +15,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (!currentUser) return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 font-sans">
       <form className="w-full max-w-sm space-y-4 rounded-2xl border bg-card p-6 shadow-sm" onSubmit={(e) => { e.preventDefault(); if (!login(u, p)) setErr("Username atau password salah."); }}>
-        <div><p className="text-xs uppercase tracking-widest text-primary">UPT Bandung</p><h1 className="text-xl font-extrabold">SI Kendaraan Dinas</h1><p className="text-sm text-muted-foreground">Masuk untuk melanjutkan</p></div>
+        <div><p className="text-xs uppercase tracking-widest text-primary">UPT Bandung</p><h1 className="text-xl font-extrabold">GARDU BANDUNG</h1><p className="text-sm text-muted-foreground">Masuk untuk melanjutkan</p></div>
         <label className="block space-y-1 text-sm font-semibold"><span>Username</span><input aria-label="Username" className={inp} required value={u} onChange={(e) => setU(e.target.value)} /></label>
         <label className="block space-y-1 text-sm font-semibold"><span>Password</span><input aria-label="Password" type="password" className={inp} required value={p} onChange={(e) => setP(e.target.value)} /></label>
         {err && <p role="alert" className="text-sm text-destructive">{err}</p>}

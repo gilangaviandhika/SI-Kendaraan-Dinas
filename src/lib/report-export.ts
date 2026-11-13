@@ -3,7 +3,7 @@ import type { Kendaraan, Trip } from "@/lib/vehicle-data";
 export async function createReportBlob(trips: Trip[], vehicles: Kendaraan[]) {
   const { Workbook } = await import("exceljs");
   const workbook = new Workbook();
-  workbook.creator = "SI Kendaraan Dinas UPT Bandung";
+  workbook.creator = "GARDU BANDUNG — UPT Bandung";
   const sheet = workbook.addWorksheet("Laporan Perjalanan");
   sheet.columns = [
     { header: "Kendaraan", key: "nopol", width: 18 },
@@ -62,7 +62,7 @@ export async function createReportBlob(trips: Trip[], vehicles: Kendaraan[]) {
 export async function createGuestReportBlob(trips: Trip[]) {
   const { Workbook } = await import("exceljs");
   const workbook = new Workbook();
-  workbook.creator = "SI Kendaraan Dinas UPT Bandung";
+  workbook.creator = "GARDU BANDUNG — UPT Bandung";
   const sheet = workbook.addWorksheet("Laporan Kendaraan Tamu");
   sheet.columns = [
     { header: "Nomor Polisi", key: "nopol", width: 18 },

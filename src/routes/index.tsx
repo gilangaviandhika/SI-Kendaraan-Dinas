@@ -15,9 +15,9 @@ import { scanOdometer } from "@/lib/odometer-ocr";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "SI Kendaraan Dinas — UPT Bandung" },
-      { name: "description", content: "Monitoring Kendaraan Dinas UPT Bandung: check-out, check-in, odometer, foto, dan laporan." },
-      { property: "og:title", content: "SI Kendaraan Dinas — UPT Bandung" },
+      { title: "GARDU BANDUNG — UPT Bandung" },
+      { name: "description", content: "GARDU BANDUNG (Gerbang Aplikasi Rekap Data Kendaraan Dinas UPT Bandung): check-out, check-in, odometer, foto, dan laporan." },
+      { property: "og:title", content: "GARDU BANDUNG — UPT Bandung" },
       { property: "og:description", content: "Monitoring Kendaraan Dinas: odometer, foto kondisi, laporan perjalanan." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -183,8 +183,8 @@ function App() {
       <aside className="bg-sidebar-bg text-primary-foreground md:min-h-screen md:w-64 md:shrink-0 p-5">
         <div className="mb-6">
           <p className="text-xs uppercase tracking-widest text-accent">UPT Bandung</p>
-          <h1 className="text-xl font-extrabold">SI Kendaraan Dinas</h1>
-          <p className="mt-1 text-xs opacity-70">Monitoring Kendaraan Dinas</p>
+          <h1 className="text-xl font-extrabold">GARDU BANDUNG</h1>
+          <p className="mt-1 text-xs opacity-70">Gerbang Aplikasi Rekap Data Kendaraan Dinas</p>
         </div>
         <nav className="flex gap-1 overflow-x-auto md:flex-col">
           {menus.map((m) => (
