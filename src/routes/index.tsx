@@ -106,21 +106,21 @@ function App() {
   // Check-out form
   const [tipe, setTipe] = useState<TipeKendaraan>("dinas");
   const tamu = tipe === "tamu";
-  const [co, setCo] = useState({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""] });
+  const [co, setCo] = useState({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", lokasi: "", satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""] });
   const kSel = kend.find((k) => k.nopol === co.nopol);
   const coValid = tamu ? isGuestCheckoutValid(co) : isCheckoutValid(co, kSel);
   const submitOut = () => {
     if (!coValid) return;
     if (tamu) {
-      setTrips((t) => [{ id: Date.now(), tipe: "tamu", nopol: co.nopol.trim(), driver: co.user.trim(), tujuan: co.tujuan, user: co.user.trim(), bidang: co.bidang.trim(), satpamOut: co.satpam, outAt: Date.now(), odoOut: 0, fotoOut: co.foto }, ...t]);
-      setCo({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""] });
+      setTrips((t) => [{ id: Date.now(), tipe: "tamu", nopol: co.nopol.trim(), driver: co.user.trim(), tujuan: co.tujuan, user: co.user.trim(), bidang: co.bidang.trim(), lokasi: co.lokasi, satpamOut: co.satpam, outAt: Date.now(), odoOut: 0, fotoOut: co.foto }, ...t]);
+      setCo({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", lokasi: "", satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""] });
       flash("Kedatangan tamu tercatat (Check-In). Proses Check-Out saat tamu keluar.");
       setMenu("Dalam Perjalanan");
       return;
     }
     setTrips((t) => [{ id: Date.now(), tipe: "dinas", nopol: co.nopol, driver: co.driver, tujuan: co.tujuan, user: co.user.trim(), bidang: co.bidang.trim(), satpamOut: co.satpam, outAt: Date.now(), odoOut: Number(co.odo), fotoOdoOut: co.fotoOdo, fotoOut: co.foto }, ...t]);
     setKend((ks) => ks.map((k) => (k.nopol === co.nopol ? { ...k, status: "Digunakan" } : k)));
-    setCo({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""] });
+    setCo({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", lokasi: "", satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""] });
     flash("Check-out tercatat. Kendaraan kini berstatus Digunakan.");
     setMenu("Dalam Perjalanan");
   };
