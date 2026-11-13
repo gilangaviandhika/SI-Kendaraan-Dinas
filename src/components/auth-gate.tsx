@@ -7,11 +7,12 @@ import { canAccessPath } from "@/lib/access";
 
 const inp = "w-full rounded-lg border bg-background px-3 py-2 text-sm";
 export function AuthGate({ children }: { children: ReactNode }) {
-  const { currentUser, login } = useFleet();
+  const { currentUser, sessionReady, login } = useFleet();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const [u, setU] = useState("");
   const [p, setP] = useState("");
   const [err, setErr] = useState("");
+  if (!sessionReady) return <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground" role="status">Memulihkan sesi masuk…</div>;
   if (!currentUser) return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 font-sans">
       <form className="w-full max-w-sm space-y-4 rounded-2xl border bg-card p-6 shadow-sm" onSubmit={(e) => { e.preventDefault(); if (!login(u, p)) setErr("Username atau password salah."); }}>

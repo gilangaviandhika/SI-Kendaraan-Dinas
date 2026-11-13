@@ -20,3 +20,5 @@
 - Prepare Excel reports from current local completed trips before the download click, using a dynamic ExcelJS import and numeric formulas with cached results, so downloads retain user activation and remain editable without implying persisted data.
 - Prepare administrative Excel reports from the same date-filtered rows shown in the list before enabling download; filter the activity/departure date inclusively so the displayed and exported records agree.
 - Register bounded stale-module recovery before the app entry through root route scripts so failed imports cannot leave server-rendered forms inert.
+- Restore mockup login from guarded persistent browser storage after hydration, with legacy session migration and a readiness gate; camera-driven page recreation must not force a new login, and this is not production authentication.
+- Resize odometer photos during bitmap decoding where supported, bound both dimensions before AI upload, and release bitmap resources to reduce mobile camera memory pressure.

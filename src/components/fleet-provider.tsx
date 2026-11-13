@@ -1,9 +1,9 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { findLogin, usernameFrom, type AppUser } from "@/lib/access";
+import { clearLoginSession, restoreLoginSession, saveLoginSession } from "@/lib/login-session";
 import { kendaraan0, trips0, drivers0, areas0, driverWilayah, type Driver, type Kendaraan } from "@/lib/vehicle-data";
 
 export type MasterUser = AppUser;
-const SESSION_KEY = "si-kendaraan-user";
 function useFleetState() {
   const [kend, setKend] = useState(kendaraan0);
   const [trips, setTrips] = useState(trips0);
@@ -15,10 +15,11 @@ function useFleetState() {
     ...[...new Set(kendaraan0.map(k => k.admin))].filter(Boolean).map(nama => ({ nama, bidang: "", username: usernameFrom(nama), password: "123456", role: "Admin" as const })),
   ]);
   const [currentName, setCurrentName] = useState<string | null>(null);
-  useEffect(() => { const saved = window.sessionStorage.getItem(SESSION_KEY); if (saved) setCurrentName(saved); }, []);
+  const [sessionReady, setSessionReady] = useState(false);
+  useEffect(() => { setCurrentName(restoreLoginSession()); setSessionReady(true); }, []);
   const currentUser = users.find(u => u.username === currentName) ?? null;
-  const login = (username: string, password: string) => { const u = findLogin(users, username, password); if (!u) return false; setCurrentName(u.username); window.sessionStorage.setItem(SESSION_KEY, u.username); return true; };
-  const logout = () => { setCurrentName(null); window.sessionStorage.removeItem(SESSION_KEY); };
+  const login = (username: string, password: string) => { const u = findLogin(users, username, password); if (!u) return false; setCurrentName(u.username); saveLoginSession(u.username); return true; };
+  const logout = () => { setCurrentName(null); clearLoginSession(); };
   // original === null menambah kendaraan; selain itu mengedit baris bernopol `original`.
   // Wilayah kerja driver selalu disinkronkan dari kendaraan yang ditugaskan kepadanya
   // agar master driver, check-out, dan check-in tetap terhubung.
@@ -39,10 +40,10 @@ function useFleetState() {
   const editUser = (original: string, user: MasterUser) => {
     const prev = users.find(u => u.nama === original);
     setUsers(old => old.map(u => u.nama === original ? user : u));
-    if (prev && prev.username === currentName) { setCurrentName(user.username); window.sessionStorage.setItem(SESSION_KEY, user.username); }
+    if (prev && prev.username === currentName) { setCurrentName(user.username); saveLoginSession(user.username); }
     setKend(old => old.map(k => k.admin === original ? { ...k, admin: user.nama } : k));
   };
-  return { kend, setKend, trips, setTrips, drivers, setDrivers, areas, setAreas, users, setUsers, upsertVehicle, editDriver, editArea, editUser, currentUser, login, logout };
+  return { kend, setKend, trips, setTrips, drivers, setDrivers, areas, setAreas, users, setUsers, upsertVehicle, editDriver, editArea, editUser, currentUser, sessionReady, login, logout };
 }
 const FleetContext = createContext<ReturnType<typeof useFleetState> | null>(null);
 export function FleetProvider({ children }: { children: ReactNode }) {
