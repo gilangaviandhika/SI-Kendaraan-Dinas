@@ -1,6 +1,7 @@
 import { prepareOdometerImage } from "@/lib/odometer-ocr";
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { LiveCamera } from "@/components/live-camera";
 import { Download, Pencil, Route as RouteIcon } from "lucide-react";
 import { createGuestReportBlob, createReportBlob, deliverReport } from "@/lib/report-export";
 import { type Trip } from "@/lib/vehicle-data";
@@ -41,12 +42,19 @@ const inp = "w-full rounded-lg border bg-background px-3 py-2 text-sm";
 const btn = "rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-40";
 
 function Foto({ label, value, onChange, onFile }: { label: string; value?: string | undefined; onChange: (u: string) => void; onFile?: (f: File) => void }) {
+  const [open, setOpen] = useState(false);
+  const [fallback, setFallback] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const onUnavailable = useCallback(() => { setOpen(false); setFallback(true); setTimeout(() => fileRef.current?.click(), 0); }, []);
   return (
-    <label className="flex cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-xl border-2 border-dashed bg-muted/40 p-2 text-xs text-muted-foreground h-28">
-      {value ? <img src={value} alt={label} className="h-full w-full object-cover rounded-lg" /> : <><span className="text-2xl">📷</span>{label}</>}
-      <input type="file" accept="image/*" className="hidden"
+    <>
+      <button type="button" onClick={() => (fallback ? fileRef.current?.click() : setOpen(true))} className="flex w-full cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-xl border-2 border-dashed bg-muted/40 p-2 text-xs text-muted-foreground h-28">
+        {value ? <img src={value} alt={label} className="h-full w-full object-cover rounded-lg" /> : <><span className="text-2xl">📷</span>{label}</>}
+      </button>
+      <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" aria-label={label}
         onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) { onFile?.(f); void prepareOdometerImage(f).then(onChange).catch(() => onChange(URL.createObjectURL(f))); } }} />
-    </label>
+      {open && <LiveCamera onClose={() => setOpen(false)} onUnavailable={onUnavailable} onCapture={(url, f) => { setOpen(false); onChange(url); onFile?.(f); }} />}
+    </>
   );
 }
 function Steps({ items, active }: { items: string[]; active: number }) {
