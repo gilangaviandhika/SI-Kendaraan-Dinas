@@ -421,6 +421,10 @@ function App() {
               <label className="space-y-1 text-sm font-semibold"><span>Nomor Polisi</span><input aria-label="Nomor polisi kendaraan tamu" className={inp} placeholder="Contoh: D 1234 AB" value={co.nopol} onChange={(e) => setCo({ ...co, nopol: e.target.value })} /></label>
               <label className="space-y-1 text-sm font-semibold"><span>Nama Tamu</span><input className={inp} placeholder="Nama tamu" value={co.user} onChange={(e) => setCo({ ...co, user: e.target.value })} /></label>
               <label className="space-y-1 text-sm font-semibold"><span>Instansi</span><input className={inp} placeholder="Asal instansi" value={co.bidang} onChange={(e) => setCo({ ...co, bidang: e.target.value })} /></label>
+              <label className="space-y-1 text-sm font-semibold"><span>Lokasi Kunjungan</span><select aria-label="Lokasi kunjungan tamu" className={inp} value={co.lokasi} onChange={(e) => setCo({ ...co, lokasi: e.target.value })}>
+                <option value="">Pilih lokasi kunjungan…</option>
+                {areas.map((a) => <option key={a} value={a}>{a}</option>)}
+              </select></label>
               </> : <>
               <label className="space-y-1 text-sm font-semibold"><span>Kendaraan</span><select aria-label="Kendaraan tersedia" className={inp} value={co.nopol} onChange={(e) => setCo({ ...co, nopol: e.target.value, odo: String(kend.find((k) => k.nopol === e.target.value)?.odo ?? "") })}>
                 <option value="">Pilih kendaraan tersedia…</option>
