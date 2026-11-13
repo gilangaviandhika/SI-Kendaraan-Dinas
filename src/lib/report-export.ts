@@ -69,6 +69,7 @@ export async function createGuestReportBlob(trips: Trip[]) {
     { header: "Nama Tamu", key: "user", width: 28 },
     { header: "Instansi", key: "bidang", width: 28 },
     { header: "Keperluan", key: "tujuan", width: 32 },
+    { header: "Lokasi Kunjungan", key: "lokasi", width: 26 },
     { header: "Masuk", key: "masuk", width: 22 },
     { header: "Keluar", key: "keluar", width: 22 },
     { header: "Satpam Masuk", key: "satpamIn", width: 24 },
