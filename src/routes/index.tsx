@@ -303,14 +303,14 @@ function App() {
               </table>
             </Card>
             {(() => {
-              const tamuAll = trips.filter((t) => t.tipe === "tamu");
+              const tamuAll = trips.filter((t) => t.tipe === "tamu" && (areaFilter === "Semua" || t.lokasi === areaFilter));
               const tamuAktif = tamuAll.filter((t) => !t.inAt).sort((a, b) => a.outAt - b.outAt);
               const tamuRentang = tamuAll.filter(dalamRentang);
               const tamuSelesai = tamuRentang.filter((t) => t.inAt);
               const rata = tamuSelesai.length ? tamuSelesai.reduce((s, t) => s + durasi(t), 0) / tamuSelesai.length : 0;
               return (
                 <div className="space-y-4">
-                  <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Ringkasan Kendaraan Tamu</h3>
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Ringkasan Kendaraan Tamu{areaFilter !== "Semua" && ` — ${areaFilter}`}</h3>
                   <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                     {[
                       { l: "Tamu Sedang Berkunjung", v: String(tamuAktif.length), c: "text-warning" },
@@ -325,7 +325,7 @@ function App() {
                     <h3 className="mb-3 font-bold">Tamu Sedang Berkunjung</h3>
                     <table aria-label="Tamu sedang berkunjung" className="w-full min-w-[48rem] text-sm">
                       <thead className="text-left text-muted-foreground">
-                        <tr><th className="py-2 pr-4">Nomor Polisi</th><th className="py-2 pr-4">Nama Tamu / Instansi</th><th className="py-2 pr-4">Keperluan</th><th className="py-2 pr-4">Jam Masuk</th><th className="py-2 pr-4">Lama Berkunjung</th><th className="py-2">Aksi</th></tr>
+                        <tr><th className="py-2 pr-4">Nomor Polisi</th><th className="py-2 pr-4">Nama Tamu / Instansi</th><th className="py-2 pr-4">Keperluan</th><th className="py-2 pr-4">Lokasi Kunjungan</th><th className="py-2 pr-4">Jam Masuk</th><th className="py-2 pr-4">Lama Berkunjung</th><th className="py-2">Aksi</th></tr>
                       </thead>
                       <tbody>
                         {tamuAktif.map((t) => (
