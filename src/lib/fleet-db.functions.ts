@@ -130,11 +130,12 @@ export const dbSync = createServerFn({ method: "POST" })
       const remove = c.users.remove.filter((u) => u !== me.username);
       if (remove.length) { fail((await db.from("app_users").delete().in("username", remove)).error); await db.from("app_sessions").delete().in("username", remove); }
       for (const u of c.users.upsert) {
-        const row: Record<string, unknown> = { username: str(u.username, 100), nama: str(u.nama), bidang: str(u.bidang), role: u.role === "Admin" ? "Admin" : "Security", urutan: ord(c.order?.users, u.username) };
-        if (u.password) row.password = str(u.password, 200);
-        const exists = (await db.from("app_users").select("username").eq("username", row.username as string).maybeSingle()).data;
-        if (!exists && !row.password) continue;
-        fail(exists ? (await db.from("app_users").update(row).eq("username", row.username as string)).error : (await db.from("app_users").insert(row as never)).error);
+        const username = str(u.username, 100);
+        const base = { nama: str(u.nama), bidang: str(u.bidang), role: u.role === "Admin" ? "Admin" : "Security", urutan: ord(c.order?.users, u.username) };
+        const password = u.password ? str(u.password, 200) : "";
+        const exists = (await db.from("app_users").select("username").eq("username", username).maybeSingle()).data;
+        if (exists) fail((await db.from("app_users").update(password ? { ...base, password } : base).eq("username", username)).error);
+        else if (password) fail((await db.from("app_users").insert({ ...base, username, password })).error);
       }
     }
     const saved: Trip[] = [];

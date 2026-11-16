@@ -9,7 +9,7 @@ function diffBy<T>(prev: T[], next: T[], key: (x: T) => string) {
   const keys = new Set(next.map(key));
   const upsert = next.filter((x) => before.get(key(x)) !== JSON.stringify(x));
   const remove = [...before.keys()].filter((k) => !keys.has(k));
-  const reordered = prev.length === next.length && prev.some((x, i) => key(x) !== key(next[i]));
+  const reordered = prev.length === next.length && prev.some((x, i) => { const n = next[i]; return n === undefined || key(x) !== key(n); });
   return upsert.length || remove.length || reordered ? { upsert, remove } : null;
 }
 
