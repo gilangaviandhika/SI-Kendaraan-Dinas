@@ -14,7 +14,201 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      app_sessions: {
+        Row: {
+          created_at: string
+          token: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          token: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          token?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      app_users: {
+        Row: {
+          bidang: string
+          created_at: string
+          nama: string
+          password: string
+          role: string
+          urutan: number
+          username: string
+        }
+        Insert: {
+          bidang?: string
+          created_at?: string
+          nama: string
+          password: string
+          role?: string
+          urutan?: number
+          username: string
+        }
+        Update: {
+          bidang?: string
+          created_at?: string
+          nama?: string
+          password?: string
+          role?: string
+          urutan?: number
+          username?: string
+        }
+        Relationships: []
+      }
+      driver: {
+        Row: {
+          created_at: string
+          nama: string
+          urutan: number
+          wilayah: string
+        }
+        Insert: {
+          created_at?: string
+          nama: string
+          urutan?: number
+          wilayah?: string
+        }
+        Update: {
+          created_at?: string
+          nama?: string
+          urutan?: number
+          wilayah?: string
+        }
+        Relationships: []
+      }
+      kendaraan: {
+        Row: {
+          admin: string
+          area: string
+          driver: string
+          kml: number | null
+          merk: string
+          nopol: string
+          odo: number | null
+          status: string
+          updated_at: string
+          urutan: number
+        }
+        Insert: {
+          admin?: string
+          area?: string
+          driver?: string
+          kml?: number | null
+          merk?: string
+          nopol: string
+          odo?: number | null
+          status?: string
+          updated_at?: string
+          urutan?: number
+        }
+        Update: {
+          admin?: string
+          area?: string
+          driver?: string
+          kml?: number | null
+          merk?: string
+          nopol?: string
+          odo?: number | null
+          status?: string
+          updated_at?: string
+          urutan?: number
+        }
+        Relationships: []
+      }
+      trips: {
+        Row: {
+          bidang: string | null
+          driver: string
+          foto_in: string[] | null
+          foto_odo_in: string | null
+          foto_odo_out: string | null
+          foto_out: string[]
+          id: number
+          in_at: number | null
+          kondisi: string | null
+          lokasi: string | null
+          nopol: string
+          odo_in: number | null
+          odo_out: number
+          out_at: number
+          pengguna: string | null
+          satpam_in: string | null
+          satpam_out: string
+          tipe: string
+          tujuan: string
+          updated_at: string
+        }
+        Insert: {
+          bidang?: string | null
+          driver?: string
+          foto_in?: string[] | null
+          foto_odo_in?: string | null
+          foto_odo_out?: string | null
+          foto_out?: string[]
+          id: number
+          in_at?: number | null
+          kondisi?: string | null
+          lokasi?: string | null
+          nopol: string
+          odo_in?: number | null
+          odo_out?: number
+          out_at: number
+          pengguna?: string | null
+          satpam_in?: string | null
+          satpam_out?: string
+          tipe?: string
+          tujuan?: string
+          updated_at?: string
+        }
+        Update: {
+          bidang?: string | null
+          driver?: string
+          foto_in?: string[] | null
+          foto_odo_in?: string | null
+          foto_odo_out?: string | null
+          foto_out?: string[]
+          id?: number
+          in_at?: number | null
+          kondisi?: string | null
+          lokasi?: string | null
+          nopol?: string
+          odo_in?: number | null
+          odo_out?: number
+          out_at?: number
+          pengguna?: string | null
+          satpam_in?: string | null
+          satpam_out?: string
+          tipe?: string
+          tujuan?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      wilayah_kerja: {
+        Row: {
+          created_at: string
+          nama: string
+          urutan: number
+        }
+        Insert: {
+          created_at?: string
+          nama: string
+          urutan?: number
+        }
+        Update: {
+          created_at?: string
+          nama?: string
+          urutan?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
