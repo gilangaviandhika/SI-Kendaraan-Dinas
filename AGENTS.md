@@ -13,12 +13,14 @@
 - Derive unique drivers and work areas from imported vehicle assignments; keep missing odometer and fuel-efficiency values null rather than inventing operational data.
 - Give e-Overtime and e-SPPD distinct content routes, sharing the administrative form and service navigation to keep the mockup consistent.
 - Administrative submissions remain local mockup state until persistence and authentication are explicitly requested; do not imply production approval or storage.
-- Share fleet, trip, and editable master data through a root React provider so local mockup changes survive navigation without implying persistence.
+- Fleet, trip, master, and user data load from the database into a root React provider and sync back as diffs through token-checked server functions (service-role only, RLS locked); trips are never deleted by sync, so multiple devices can work concurrently.
 - Give each master category a distinct child route under an Outlet layout so categories can be opened independently.
 - Capture passenger and department at checkout and prefill check-in from the trip so identity is retained through the journey.
 - Apply master edits through the fleet provider, synchronizing vehicle assignments and renamed plate trip references while retaining trip passenger/driver snapshots, so related records remain usable.
 - Prepare Excel reports from current local completed trips before the download click, using a dynamic ExcelJS import and numeric formulas with cached results, so downloads retain user activation and remain editable without implying persisted data.
 - Prepare administrative Excel reports from the same date-filtered rows shown in the list before enabling download; filter the activity/departure date inclusively so the displayed and exported records agree.
 - Register bounded stale-module recovery before the app entry through root route scripts so failed imports cannot leave server-rendered forms inert.
-- Restore mockup login from guarded persistent browser storage after hydration, with legacy session migration and a readiness gate; camera-driven page recreation must not force a new login, and this is not production authentication.
+- Login verifies credentials server-side and stores only an opaque session token in guarded persistent browser storage, restored after hydration behind a readiness gate; camera-driven page recreation must not force a new login.
 - Resize odometer photos during bitmap decoding where supported, bound both dimensions before AI upload, and release bitmap resources to reduce mobile camera memory pressure.
+
+- Trip photos upload from data URLs to the private trip-photos bucket during sync; the database stores object paths and clients receive short-lived signed URLs, so storage can be migrated as plain files.
