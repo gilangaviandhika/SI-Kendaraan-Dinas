@@ -1,5 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import type { AppUser } from "@/lib/access";
+import type { Database } from "@/integrations/supabase/types";
+type TripRow = Database["public"]["Tables"]["trips"]["Row"];
+type UserRow = Database["public"]["Tables"]["app_users"]["Row"];
 import type { Driver, Kendaraan, Trip } from "@/lib/vehicle-data";
 
 const BUCKET = "trip-photos";
@@ -51,13 +54,13 @@ async function storePhoto(db: Admin, tripId: number, name: string, value?: strin
   return value.startsWith("http") ? null : value;
 }
 
-const rowToTrip = (r: Record<string, any>): Trip => ({
-  id: Number(r.id), tipe: r.tipe, nopol: r.nopol, driver: r.driver, tujuan: r.tujuan, lokasi: r.lokasi ?? undefined,
+const rowToTrip = (r: Omit<TripRow, "updated_at"> & { updated_at?: string }): Trip => ({
+  id: Number(r.id), tipe: r.tipe === "tamu" ? "tamu" : "dinas", nopol: r.nopol, driver: r.driver, tujuan: r.tujuan, lokasi: r.lokasi ?? undefined,
   user: r.pengguna ?? undefined, bidang: r.bidang ?? undefined, satpamOut: r.satpam_out, outAt: Number(r.out_at), odoOut: Number(r.odo_out),
   fotoOdoOut: r.foto_odo_out ?? undefined, fotoOut: r.foto_out ?? [], satpamIn: r.satpam_in ?? undefined, inAt: r.in_at == null ? undefined : Number(r.in_at),
   odoIn: r.odo_in == null ? undefined : Number(r.odo_in), fotoOdoIn: r.foto_odo_in ?? undefined, fotoIn: r.foto_in ?? undefined, kondisi: r.kondisi ?? undefined,
 });
-const toAppUser = (u: Record<string, any>, withPassword: boolean): AppUser => ({ nama: u.nama, bidang: u.bidang, username: u.username, password: withPassword ? u.password : "", role: u.role === "Admin" ? "Admin" : "Security" });
+const toAppUser = (u: UserRow, withPassword: boolean): AppUser => ({ nama: u.nama, bidang: u.bidang, username: u.username, password: withPassword ? u.password : "", role: u.role === "Admin" ? "Admin" : "Security" });
 
 export const dbLogin = createServerFn({ method: "POST" })
   .inputValidator((d: { username: string; password: string }) => ({ username: str(d?.username, 100).trim().toLowerCase(), password: str(d?.password, 200) }))
