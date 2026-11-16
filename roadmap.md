@@ -19,4 +19,4 @@
 - [x] Login sementara admin/admin dilepas atas permintaan pengguna
 - [x] Login mockup dengan peran Admin dan Security
 - [x] Perbaiki pemulihan sesi setelah kamera HP dan ringankan foto odometer; uji sesi serta alur foto
-- [ ] Simpan data & foto ke database
+- [x] Simpan data & foto ke database

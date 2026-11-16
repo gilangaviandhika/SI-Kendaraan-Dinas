@@ -1,25 +1,105 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { findLogin, usernameFrom, type AppUser } from "@/lib/access";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import type { AppUser } from "@/lib/access";
 import { clearLoginSession, restoreLoginSession, saveLoginSession } from "@/lib/login-session";
-import { kendaraan0, trips0, drivers0, areas0, driverWilayah, type Driver, type Kendaraan } from "@/lib/vehicle-data";
+import { driverWilayah, type Driver, type Kendaraan, type Trip } from "@/lib/vehicle-data";
+import { dbLoad, dbLogin, dbLogout, dbSync, type FleetChanges } from "@/lib/fleet-db.functions";
+import { diffFleet, type FleetSnapshot } from "@/lib/fleet-sync";
 
 export type MasterUser = AppUser;
+const POLL_MS = 20000;
+
 function useFleetState() {
-  const [kend, setKend] = useState(kendaraan0);
-  const [trips, setTrips] = useState(trips0);
-  const [drivers, setDrivers] = useState<Driver[]>(drivers0);
-  const [areas, setAreas] = useState(areas0);
-  const [users, setUsers] = useState<MasterUser[]>(() => [
-    { nama: "Administrator", bidang: "", username: "admin", password: "admin", role: "Admin" },
-    { nama: "Petugas Security", bidang: "", username: "security", password: "security", role: "Security" },
-    ...[...new Set(kendaraan0.map(k => k.admin))].filter(Boolean).map(nama => ({ nama, bidang: "", username: usernameFrom(nama), password: "123456", role: "Admin" as const })),
-  ]);
+  const [kend, setKend] = useState<Kendaraan[]>([]);
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [areas, setAreas] = useState<string[]>([]);
+  const [users, setUsers] = useState<MasterUser[]>([]);
   const [currentName, setCurrentName] = useState<string | null>(null);
   const [sessionReady, setSessionReady] = useState(false);
-  useEffect(() => { setCurrentName(restoreLoginSession()); setSessionReady(true); }, []);
-  const currentUser = users.find(u => u.username === currentName) ?? null;
-  const login = (username: string, password: string) => { const u = findLogin(users, username, password); if (!u) return false; setCurrentName(u.username); saveLoginSession(u.username); return true; };
-  const logout = () => { setCurrentName(null); clearLoginSession(); };
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const token = useRef<string | null>(null);
+  const synced = useRef<FleetSnapshot | null>(null);
+  const busy = useRef(false);
+
+  const hydrate = useCallback((d: NonNullable<Awaited<ReturnType<typeof dbLoad>>>) => {
+    synced.current = { kend: d.kend, drivers: d.drivers, areas: d.areas, users: d.users, trips: d.trips };
+    setKend(d.kend); setDrivers(d.drivers); setAreas(d.areas); setUsers(d.users); setTrips(d.trips); setCurrentName(d.username);
+  }, []);
+  const reset = useCallback(() => {
+    token.current = null; synced.current = null; setCurrentName(null);
+    setKend([]); setDrivers([]); setAreas([]); setUsers([]); setTrips([]);
+  }, []);
+
+  useEffect(() => {
+    const t = restoreLoginSession();
+    if (!t) { setSessionReady(true); return; }
+    token.current = t;
+    dbLoad({ data: { token: t } })
+      .then((d) => { if (d) hydrate(d); else { clearLoginSession(); reset(); } })
+      .catch(() => setSyncError("Tidak dapat terhubung ke database."))
+      .finally(() => setSessionReady(true));
+  }, [hydrate, reset]);
+
+  // Kirim perubahan lokal ke database (sedikit ditunda agar beberapa perubahan sekaligus terkirim).
+  const state: FleetSnapshot = { kend, drivers, areas, users, trips };
+  const stateRef = useRef(state); stateRef.current = state;
+  useEffect(() => {
+    if (!token.current || !synced.current || busy.current) return;
+    const changes = diffFleet(synced.current, state);
+    if (!changes) return;
+    const timer = setTimeout(() => void push(changes), 400);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kend, drivers, areas, users, trips]);
+
+  async function push(changes: FleetChanges) {
+    if (!token.current || !synced.current) return;
+    busy.current = true;
+    const sent = stateRef.current;
+    try {
+      const res = await dbSync({ data: { token: token.current, changes } });
+      const byId = new Map(res.trips.map((t) => [t.id, t]));
+      const trips2 = sent.trips.map((t) => byId.get(t.id) ?? t);
+      synced.current = { ...sent, trips: trips2 };
+      setTrips((cur) => cur.map((t) => { const s = byId.get(t.id); const was = sent.trips.find((x) => x.id === t.id); return s && was === t ? s : t; }));
+      setSyncError(null);
+    } catch (e) {
+      setSyncError(e instanceof Error ? e.message : "Gagal menyimpan ke database.");
+    } finally {
+      busy.current = false;
+      const again = synced.current && diffFleet(synced.current, stateRef.current);
+      if (again && !syncErrorRef.current) setTimeout(() => void push(again), 400);
+    }
+  }
+  const syncErrorRef = useRef(syncError); syncErrorRef.current = syncError;
+
+  // Ambil data terbaru dari perangkat lain secara berkala bila tidak ada perubahan yang belum tersimpan.
+  useEffect(() => {
+    if (!currentName) return;
+    const id = setInterval(() => {
+      if (!token.current || busy.current || !synced.current || diffFleet(synced.current, stateRef.current)) return;
+      dbLoad({ data: { token: token.current } }).then((d) => {
+        if (!d) { clearLoginSession(); reset(); return; }
+        if (!busy.current && synced.current && !diffFleet(synced.current, stateRef.current)) hydrate(d);
+      }).catch(() => undefined);
+    }, POLL_MS);
+    return () => clearInterval(id);
+  }, [currentName, hydrate, reset]);
+
+  const currentUser = users.find((u) => u.username === currentName) ?? null;
+  const login = async (username: string, password: string) => {
+    const { token: t } = await dbLogin({ data: { username, password } });
+    if (!t) return false;
+    const d = await dbLoad({ data: { token: t } });
+    if (!d) return false;
+    token.current = t; saveLoginSession(t); hydrate(d); setSyncError(null);
+    return true;
+  };
+  const logout = () => {
+    const t = token.current;
+    clearLoginSession(); reset();
+    if (t) void dbLogout({ data: { token: t } }).catch(() => undefined);
+  };
   // original === null menambah kendaraan; selain itu mengedit baris bernopol `original`.
   // Wilayah kerja driver selalu disinkronkan dari kendaraan yang ditugaskan kepadanya
   // agar master driver, check-out, dan check-in tetap terhubung.
@@ -38,12 +118,10 @@ function useFleetState() {
     setKend(old => old.map(k => k.area === original ? { ...k, area: name } : k));
   };
   const editUser = (original: string, user: MasterUser) => {
-    const prev = users.find(u => u.nama === original);
     setUsers(old => old.map(u => u.nama === original ? user : u));
-    if (prev && prev.username === currentName) { setCurrentName(user.username); saveLoginSession(user.username); }
     setKend(old => old.map(k => k.admin === original ? { ...k, admin: user.nama } : k));
   };
-  return { kend, setKend, trips, setTrips, drivers, setDrivers, areas, setAreas, users, setUsers, upsertVehicle, editDriver, editArea, editUser, currentUser, sessionReady, login, logout };
+  return { kend, setKend, trips, setTrips, drivers, setDrivers, areas, setAreas, users, setUsers, upsertVehicle, editDriver, editArea, editUser, currentUser, sessionReady, login, logout, syncError };
 }
 const FleetContext = createContext<ReturnType<typeof useFleetState> | null>(null);
 export function FleetProvider({ children }: { children: ReactNode }) {
