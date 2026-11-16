@@ -44,15 +44,16 @@ async function storePhoto(db: Admin, tripId: number, name: string, value?: strin
   if (!value) return null;
   if (value.startsWith("data:")) {
     const m = /^data:(image\/[a-z+]+);base64,(.+)$/.exec(value);
-    if (!m) return null;
+    if (!m?.[1] || !m[2]) return null;
+    const mime = m[1];
     const bytes = Uint8Array.from(atob(m[2]), (c) => c.charCodeAt(0));
-    const path = `trips/${tripId}/${name}-${Date.now()}.${m[1] === "image/png" ? "png" : "jpg"}`;
-    const { error } = await db.storage.from(BUCKET).upload(path, bytes, { contentType: m[1], upsert: true });
+    const path = `trips/${tripId}/${name}-${Date.now()}.${mime === "image/png" ? "png" : "jpg"}`;
+    const { error } = await db.storage.from(BUCKET).upload(path, bytes, { contentType: mime, upsert: true });
     if (error) throw new Error("Upload foto gagal");
     return path;
   }
   const i = value.indexOf(`/${BUCKET}/`);
-  if (value.startsWith("http") && i >= 0) return decodeURIComponent(value.slice(i + BUCKET.length + 2).split("?")[0]);
+  if (value.startsWith("http") && i >= 0) return decodeURIComponent(value.slice(i + BUCKET.length + 2).split("?")[0] ?? "");
   return value.startsWith("http") ? null : value;
 }
 
