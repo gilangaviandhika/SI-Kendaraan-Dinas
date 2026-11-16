@@ -16,6 +16,8 @@ export type FleetChanges = {
 };
 type Admin = Awaited<typeof import("@/integrations/supabase/client.server")>["supabaseAdmin"];
 const admin = async (): Promise<Admin> => (await import("@/integrations/supabase/client.server")).supabaseAdmin;
+/** Menghapus properti undefined agar cocok dengan tipe Trip (exactOptionalPropertyTypes). */
+const clean = (o: Record<string, unknown>) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as Trip;
 const str = (v: unknown, max = 500) => (typeof v === "string" ? v.slice(0, max) : "");
 
 async function sessionUser(db: Admin, token: unknown) {
@@ -34,7 +36,7 @@ async function signPhotos(db: Admin, trips: Trip[]) {
     data?.forEach((d) => { if (d.path && d.signedUrl) map.set(d.path, d.signedUrl); });
   }
   const s = (p?: string) => (p ? map.get(p) ?? p : p);
-  return trips.map((t) => ({ ...t, fotoOdoOut: s(t.fotoOdoOut), fotoOdoIn: s(t.fotoOdoIn), fotoOut: t.fotoOut.map((p) => s(p) ?? ""), fotoIn: t.fotoIn?.map((p) => s(p) ?? "") }));
+  return trips.map((t) => clean({ ...t, fotoOdoOut: s(t.fotoOdoOut), fotoOdoIn: s(t.fotoOdoIn), fotoOut: t.fotoOut.map((p) => s(p) ?? ""), fotoIn: t.fotoIn?.map((p) => s(p) ?? "") }));
 }
 
 /** Mengubah foto data-URL menjadi berkas di storage; URL bertanda tangan dikembalikan ke path aslinya. */
@@ -54,7 +56,7 @@ async function storePhoto(db: Admin, tripId: number, name: string, value?: strin
   return value.startsWith("http") ? null : value;
 }
 
-const rowToTrip = (r: Omit<TripRow, "updated_at"> & { updated_at?: string }): Trip => ({
+const rowToTrip = (r: Omit<TripRow, "updated_at"> & { updated_at?: string }): Trip => clean({
   id: Number(r.id), tipe: r.tipe === "tamu" ? "tamu" : "dinas", nopol: r.nopol, driver: r.driver, tujuan: r.tujuan, lokasi: r.lokasi ?? undefined,
   user: r.pengguna ?? undefined, bidang: r.bidang ?? undefined, satpamOut: r.satpam_out, outAt: Number(r.out_at), odoOut: Number(r.odo_out),
   fotoOdoOut: r.foto_odo_out ?? undefined, fotoOut: r.foto_out ?? [], satpamIn: r.satpam_in ?? undefined, inAt: r.in_at == null ? undefined : Number(r.in_at),
