@@ -4,6 +4,7 @@ import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFleet } from "@/components/fleet-provider";
 import { canAccessPath } from "@/lib/access";
+import logo from "@/assets/gardu-bandung-logo.jpg.asset.json";
 
 const inp = "w-full rounded-lg border bg-background px-3 py-2 text-sm";
 export function AuthGate({ children }: { children: ReactNode }) {
@@ -17,7 +18,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (!currentUser) return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 font-sans">
       <form className="w-full max-w-sm space-y-4 rounded-2xl border bg-card p-6 shadow-sm" onSubmit={(e) => { e.preventDefault(); setBusy(true); setErr(""); login(u, p).then((ok) => { if (!ok) setErr("Username atau password salah."); }).catch(() => setErr("Tidak dapat terhubung ke database. Coba lagi.")).finally(() => setBusy(false)); }}>
-        <div><p className="text-xs uppercase tracking-widest text-primary">UPT Bandung</p><h1 className="text-xl font-extrabold">GARDU BANDUNG</h1><p className="text-sm text-muted-foreground">Masuk untuk melanjutkan</p></div>
+        <div className="text-center"><img src={logo.url} alt="Logo GARDU BANDUNG" width={160} height={160} className="mx-auto h-40 w-40 rounded-3xl shadow-md" /><h1 className="sr-only">GARDU BANDUNG</h1><p className="mt-3 text-sm text-muted-foreground">Masuk untuk melanjutkan</p></div>
         <label className="block space-y-1 text-sm font-semibold"><span>Username</span><input aria-label="Username" className={inp} required value={u} onChange={(e) => setU(e.target.value)} /></label>
         <label className="block space-y-1 text-sm font-semibold"><span>Password</span><input aria-label="Password" type="password" className={inp} required value={p} onChange={(e) => setP(e.target.value)} /></label>
         {err && <p role="alert" className="text-sm text-destructive">{err}</p>}

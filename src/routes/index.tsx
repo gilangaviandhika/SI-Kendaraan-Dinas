@@ -7,6 +7,7 @@ import { createGuestReportBlob, createReportBlob, deliverReport } from "@/lib/re
 import { type Trip } from "@/lib/vehicle-data";
 import { useFleet } from "@/components/fleet-provider";
 import { UserBadge } from "@/components/auth-gate";
+import logo from "@/assets/gardu-bandung-logo.jpg.asset.json";
 import { MasterNav } from "@/components/master-nav";
 import { isCheckoutValid, isCheckinValid, isGuestCheckoutValid, isGuestCheckinValid, type TipeKendaraan } from "@/lib/checkout";
 import { dashboardTripRows, inRange, rangeBounds, timeRangePresets, type TimeRangePreset } from "@/lib/dashboard-filter";
@@ -192,6 +193,7 @@ function App() {
     <div className="min-h-screen font-sans md:flex">
       <aside className="bg-sidebar-bg text-primary-foreground md:min-h-screen md:w-64 md:shrink-0 p-5">
         <div className="mb-6">
+          <img src={logo.url} alt="Logo GARDU BANDUNG" width={56} height={56} className="mb-2 h-14 w-14 rounded-xl" />
           <p className="text-xs uppercase tracking-widest text-accent">UPT Bandung</p>
           <h1 className="text-xl font-extrabold">GARDU BANDUNG</h1>
           <p className="mt-1 text-xs opacity-70">Gerbang Aplikasi Rekap Data Kendaraan Dinas</p>
