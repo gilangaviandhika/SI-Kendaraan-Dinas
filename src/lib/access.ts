@@ -4,7 +4,7 @@ export type AppUser = { nama: string; bidang: string; username: string; password
 /** Security hanya boleh membuka Dashboard (beserta Check-Out, Dalam Perjalanan, Check-In, Laporan). */
 export function canAccessPath(role: Role, path: string): boolean {
   if (role === "Admin") return true;
-  return path === "/" || path === "";
+  return path === "/" || path === "" || path.startsWith("/foto/");
 }
 export function findLogin(users: AppUser[], username: string, password: string): AppUser | undefined {
   const u = username.trim().toLowerCase();

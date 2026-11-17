@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as EOvertimeRouteImport } from './routes/e-overtime'
 import { Route as ESppdRouteImport } from './routes/e-sppd'
 import { Route as MasterRouteImport } from './routes/master'
+import { Route as FotoIdRouteImport } from './routes/foto.$id'
 import { Route as MasterAreaKerjaRouteImport } from './routes/master.area-kerja'
 import { Route as MasterDriverRouteImport } from './routes/master.driver'
 import { Route as MasterKendaraanRouteImport } from './routes/master.kendaraan'
@@ -36,6 +37,11 @@ const ESppdRoute = ESppdRouteImport.update({
 const MasterRoute = MasterRouteImport.update({
   id: '/master',
   path: '/master',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FotoIdRoute = FotoIdRouteImport.update({
+  id: '/foto/$id',
+  path: '/foto/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MasterAreaKerjaRoute = MasterAreaKerjaRouteImport.update({
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/e-overtime': typeof EOvertimeRoute
   '/e-sppd': typeof ESppdRoute
   '/master': typeof MasterRouteWithChildren
+  '/foto/$id': typeof FotoIdRoute
   '/master/area-kerja': typeof MasterAreaKerjaRoute
   '/master/driver': typeof MasterDriverRoute
   '/master/kendaraan': typeof MasterKendaraanRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByTo {
   '/e-overtime': typeof EOvertimeRoute
   '/e-sppd': typeof ESppdRoute
   '/master': typeof MasterRouteWithChildren
+  '/foto/$id': typeof FotoIdRoute
   '/master/area-kerja': typeof MasterAreaKerjaRoute
   '/master/driver': typeof MasterDriverRoute
   '/master/kendaraan': typeof MasterKendaraanRoute
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   '/e-overtime': typeof EOvertimeRoute
   '/e-sppd': typeof ESppdRoute
   '/master': typeof MasterRouteWithChildren
+  '/foto/$id': typeof FotoIdRoute
   '/master/area-kerja': typeof MasterAreaKerjaRoute
   '/master/driver': typeof MasterDriverRoute
   '/master/kendaraan': typeof MasterKendaraanRoute
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/e-overtime'
     | '/e-sppd'
     | '/master'
+    | '/foto/$id'
     | '/master/area-kerja'
     | '/master/driver'
     | '/master/kendaraan'
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/e-overtime'
     | '/e-sppd'
     | '/master'
+    | '/foto/$id'
     | '/master/area-kerja'
     | '/master/driver'
     | '/master/kendaraan'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/e-overtime'
     | '/e-sppd'
     | '/master'
+    | '/foto/$id'
     | '/master/area-kerja'
     | '/master/driver'
     | '/master/kendaraan'
@@ -128,6 +140,7 @@ export interface RootRouteChildren {
   EOvertimeRoute: typeof EOvertimeRoute
   ESppdRoute: typeof ESppdRoute
   MasterRoute: typeof MasterRouteWithChildren
+  FotoIdRoute: typeof FotoIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -158,6 +171,13 @@ declare module '@tanstack/react-router' {
       path: '/master'
       fullPath: '/master'
       preLoaderRoute: typeof MasterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/foto/$id': {
+      id: '/foto/$id'
+      path: '/foto/$id'
+      fullPath: '/foto/$id'
+      preLoaderRoute: typeof FotoIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/master/area-kerja': {
@@ -213,6 +233,7 @@ const rootRouteChildren: RootRouteChildren = {
   EOvertimeRoute: EOvertimeRoute,
   ESppdRoute: ESppdRoute,
   MasterRoute: MasterRouteWithChildren,
+  FotoIdRoute: FotoIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

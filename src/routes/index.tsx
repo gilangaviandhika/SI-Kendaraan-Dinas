@@ -85,13 +85,14 @@ function App() {
   const scanNote = (which: "out" | "in") => scan?.which === which && <p className="mt-1 text-xs text-muted-foreground" role="status">{scan.state === "busy" ? "Membaca angka dari foto odometer…" : scan.state === "ok" ? "Angka terbaca otomatis dari foto. Tekan Edit bila tidak sesuai." : "Angka tidak terbaca dari foto, silakan isi manual."}</p>;
   const [reportBlob, setReportBlob] = useState<Blob | null>(null);
   const [reportError, setReportError] = useState("");
+  const [zoom, setZoom] = useState("");
   const [reportTab, setReportTab] = useState<TipeKendaraan>("dinas");
   useEffect(() => {
     if (menu !== "Laporan") return;
     let cancelled = false;
     setReportBlob(null);
     setReportError("");
-    (reportTab === "tamu" ? createGuestReportBlob(trips) : createReportBlob(trips, kend)).then(blob => { if (!cancelled) setReportBlob(blob); }).catch(() => { if (!cancelled) setReportError("Laporan belum dapat disiapkan. Buka kembali menu Laporan untuk mencoba lagi."); });
+    (reportTab === "tamu" ? createGuestReportBlob(trips, window.location.origin) : createReportBlob(trips, kend, window.location.origin)).then(blob => { if (!cancelled) setReportBlob(blob); }).catch(() => { if (!cancelled) setReportError("Laporan belum dapat disiapkan. Buka kembali menu Laporan untuk mencoba lagi."); });
     return () => { cancelled = true; };
   }, [menu, trips, kend, reportTab]);
 
@@ -548,7 +549,7 @@ function App() {
                   <td>{fmtWaktu(t.outAt)}<br /><span className="text-xs text-muted-foreground">{t.satpamOut}</span></td>
                   <td>{fmtWaktu(t.inAt)}<br /><span className="text-xs text-muted-foreground">{t.satpamIn}</span></td>
                   <td>{t.kondisi}</td>
-                  <td><div className="flex gap-1">{[...t.fotoOut, ...(t.fotoIn ?? [])].filter(Boolean).map((f, i) => <img key={i} src={f} alt="Foto kendaraan tamu" className="h-8 w-8 rounded object-cover" />)}</div></td>
+                  <td><div className="flex gap-1">{[...t.fotoOut, ...(t.fotoIn ?? [])].filter(Boolean).map((f, i) => <button key={i} type="button" aria-label="Perbesar foto" onClick={() => setZoom(f)}><img src={f} alt="Foto kendaraan tamu" className="h-8 w-8 cursor-zoom-in rounded object-cover hover:ring-2 hover:ring-primary" /></button>)}</div></td>
                 </tr>
               ))}</tbody>
             </table>
@@ -567,7 +568,7 @@ function App() {
                   <td className="text-right font-semibold">{jarak(t).toLocaleString("id-ID")} KM</td>
                    <td className="text-right">{bbm(t) === null ? "Belum tersedia" : `${bbm(t)?.toFixed(1)} L`}</td>
                   <td>{t.kondisi}</td>
-                  <td><div className="flex gap-1">{[...(t.fotoOdoOut ? [t.fotoOdoOut] : []), ...t.fotoOut, ...(t.fotoOdoIn ? [t.fotoOdoIn] : []), ...(t.fotoIn ?? [])].map((f, i) => <img key={i} src={f} alt="Foto odometer atau kendaraan" className="h-8 w-8 rounded object-cover" />)}
+                  <td><div className="flex gap-1">{[...(t.fotoOdoOut ? [t.fotoOdoOut] : []), ...t.fotoOut, ...(t.fotoOdoIn ? [t.fotoOdoIn] : []), ...(t.fotoIn ?? [])].map((f, i) => <button key={i} type="button" aria-label="Perbesar foto" onClick={() => setZoom(f)}><img src={f} alt="Foto odometer atau kendaraan" className="h-8 w-8 cursor-zoom-in rounded object-cover hover:ring-2 hover:ring-primary" /></button>)}
                     {t.fotoOut.length === 0 && <span className="text-xs text-muted-foreground">contoh</span>}</div></td>
                 </tr>
               ))}</tbody>
@@ -578,6 +579,12 @@ function App() {
 
 
       </main>
+      {zoom && (
+        <div role="dialog" aria-modal="true" aria-label="Foto ukuran aktual" className="fixed inset-0 z-50 overflow-auto bg-foreground/80 p-4" onClick={() => setZoom("")}>
+          <div className="sticky top-0 mb-2 flex justify-end gap-2"><a href={zoom} target="_blank" rel="noreferrer" download onClick={(e) => e.stopPropagation()} className="rounded bg-background px-3 py-1 text-sm font-semibold">Unduh</a><button type="button" className="rounded bg-background px-3 py-1 text-sm font-semibold" onClick={() => setZoom("")}>Tutup</button></div>
+          <img src={zoom} alt="Foto ukuran aktual" className="mx-auto max-w-none" onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
     </div>
   );
 }

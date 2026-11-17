@@ -1,6 +1,13 @@
 import type { Kendaraan, Trip } from "@/lib/vehicle-data";
 
-export async function createReportBlob(trips: Trip[], vehicles: Kendaraan[]) {
+export const photoLink = (base: string, id: number) => `${base.replace(/\/$/, "")}/foto/${id}`;
+const addPhotoCell = (row: { getCell: (k: string) => { value: unknown; font?: unknown } }, base: string | undefined, id: number) => {
+  if (!base) return;
+  const c = row.getCell("foto"); const url = photoLink(base, id);
+  c.value = { text: "Lihat & unduh foto", hyperlink: url, tooltip: url }; c.font = { name: "Arial", size: 11, color: { argb: "FF0563C1" }, underline: true };
+};
+
+export async function createReportBlob(trips: Trip[], vehicles: Kendaraan[], base?: string) {
   const { Workbook } = await import("exceljs");
   const workbook = new Workbook();
   workbook.creator = "GARDU BANDUNG — UPT Bandung";
@@ -23,6 +30,7 @@ export async function createReportBlob(trips: Trip[], vehicles: Kendaraan[]) {
     { header: "Estimasi BBM (Ltr)", key: "bbm", width: 22 },
     { header: "Waktu Perjalanan (jam)", key: "durasi", width: 26 },
     { header: "Kondisi", key: "kondisi", width: 36 },
+    { header: "Foto", key: "foto", width: 22 },
   ];
   for (const trip of trips) {
     if (trip.tipe === "tamu" || trip.inAt === undefined || trip.odoIn === undefined) continue;
@@ -42,14 +50,16 @@ export async function createReportBlob(trips: Trip[], vehicles: Kendaraan[]) {
     const n = row.number;
     row.getCell("jarak").value = { formula: `L${n}-K${n}`, result: distance };
     row.getCell("bbm").value = efficiency === null ? null : { formula: `M${n}/N${n}`, result: distance / efficiency };
+    addPhotoCell(row, base, trip.id);
     row.getCell("durasi").value = { formula: `(H${n}-G${n})*24`, result: (trip.inAt - trip.outAt) / 3_600_000 };
   }
   sheet.views = [{ state: "frozen", ySplit: 1 }];
-  sheet.autoFilter = { from: "A1", to: `Q${Math.max(1, sheet.rowCount)}` };
+  sheet.autoFilter = { from: "A1", to: `R${Math.max(1, sheet.rowCount)}` };
   sheet.eachRow(row => {
     row.font = { name: "Arial", size: 11 };
     row.alignment = { vertical: "top", wrapText: true };
   });
+  sheet.getColumn("foto").eachCell((c, r) => { if (r > 1 && c.value) c.font = { name: "Arial", size: 11, color: { argb: "FF0563C1" }, underline: true }; });
   const header = sheet.getRow(1);
   header.font = { name: "Arial", size: 11, bold: true };
   header.height = 32;
@@ -59,7 +69,7 @@ export async function createReportBlob(trips: Trip[], vehicles: Kendaraan[]) {
   return new Blob([new Uint8Array(bytes)], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
 }
 
-export async function createGuestReportBlob(trips: Trip[]) {
+export async function createGuestReportBlob(trips: Trip[], base?: string) {
   const { Workbook } = await import("exceljs");
   const workbook = new Workbook();
   workbook.creator = "GARDU BANDUNG — UPT Bandung";
@@ -76,6 +86,7 @@ export async function createGuestReportBlob(trips: Trip[]) {
     { header: "Satpam Keluar", key: "satpamOut", width: 24 },
     { header: "Lama Kunjungan (jam)", key: "durasi", width: 24 },
     { header: "Kondisi", key: "kondisi", width: 36 },
+    { header: "Foto", key: "foto", width: 22 },
   ];
   const excelDate = (ms: number) => new Date(ms - new Date(ms).getTimezoneOffset() * 60_000);
   for (const trip of trips) {
@@ -87,11 +98,13 @@ export async function createGuestReportBlob(trips: Trip[]) {
       satpamIn: trip.satpamOut, satpamOut: trip.satpamIn ?? "", kondisi: trip.kondisi ?? "",
     });
     const n = row.number;
+    addPhotoCell(row, base, trip.id);
     row.getCell("durasi").value = { formula: `(F${n}-E${n})*24`, result: (trip.inAt - trip.outAt) / 3_600_000 };
   }
   sheet.views = [{ state: "frozen", ySplit: 1 }];
-  sheet.autoFilter = { from: "A1", to: `K${Math.max(1, sheet.rowCount)}` };
+  sheet.autoFilter = { from: "A1", to: `L${Math.max(1, sheet.rowCount)}` };
   sheet.eachRow(row => { row.font = { name: "Arial", size: 11 }; row.alignment = { vertical: "top", wrapText: true }; });
+  sheet.getColumn("foto").eachCell((c, r) => { if (r > 1 && c.value) c.font = { name: "Arial", size: 11, color: { argb: "FF0563C1" }, underline: true }; });
   const header = sheet.getRow(1);
   header.font = { name: "Arial", size: 11, bold: true };
   header.height = 32;
