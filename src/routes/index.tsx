@@ -2,7 +2,7 @@ import { prepareOdometerImage } from "@/lib/odometer-ocr";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { LiveCamera } from "@/components/live-camera";
-import { Download, Pencil, Route as RouteIcon } from "lucide-react";
+import { Car, CheckCheck, Clock, Download, FileText, Flag, Fuel, Gauge, LayoutDashboard, LogIn, LogOut, Navigation, Pencil, Route as RouteIcon } from "lucide-react";
 import { createGuestReportBlob, createReportBlob, deliverReport } from "@/lib/report-export";
 import { type Trip } from "@/lib/vehicle-data";
 import { useFleet } from "@/components/fleet-provider";
@@ -35,12 +35,20 @@ const fmtWaktu = (ms?: number) => (ms ? new Date(ms).toLocaleString("id-ID", { d
 
 const menus = ["Dashboard", "Check-Out", "Dalam Perjalanan", "Check-In", "Laporan"] as const;
 type Menu = (typeof menus)[number];
+// Ikon kecil pada tombol menu, dipakai juga pada tombol aksi Check-Out/Check-In.
+const menuIcons: Record<Menu, typeof LayoutDashboard> = {
+  Dashboard: LayoutDashboard,
+  "Check-Out": LogOut,
+  "Dalam Perjalanan": Navigation,
+  "Check-In": LogIn,
+  Laporan: FileText,
+};
 
 const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
   <div className={`rounded-2xl border bg-card p-5 shadow-sm ${className}`}>{children}</div>
 );
 const inp = "w-full rounded-lg border bg-background px-3 py-2 text-sm";
-const btn = "rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-40";
+const btn = "inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-40";
 
 function Foto({ label, value, onChange, onFile }: { label: string; value?: string | undefined; onChange: (u: string) => void; onFile?: (f: File) => void }) {
   const [open, setOpen] = useState(false);
@@ -199,12 +207,15 @@ function App() {
           <p className="mt-1 text-xs opacity-70">Gerbang Aplikasi Rekap Data Kendaraan Dinas</p>
         </div>
         <nav className="flex gap-1 overflow-x-auto md:flex-col">
-          {menus.map((m) => (
+          {menus.map((m) => {
+            const Icon = menuIcons[m];
+            return (
             <Button variant="ghost" key={m} onClick={() => setMenu(m)}
               className={`justify-start whitespace-nowrap rounded-lg px-3 py-2 text-left text-sm font-semibold ${menu === m ? "bg-accent text-accent-foreground" : "hover:bg-primary-foreground/10 hover:text-primary-foreground"}`}>
-              {m}{m === "Dalam Perjalanan" && aktif.length > 0 && <span className="ml-2 rounded-full bg-warning px-2 text-xs text-foreground">{aktif.length}</span>}
+              <Icon size={16} className="shrink-0" />{m}{m === "Dalam Perjalanan" && aktif.length > 0 && <span className="ml-2 rounded-full bg-warning px-2 text-xs text-foreground">{aktif.length}</span>}
             </Button>
-          ))}
+            );
+          })}
         </nav>
         {currentUser?.role === "Admin" && <><MasterNav /><ServiceNav /></>}
         <UserBadge />
@@ -243,23 +254,23 @@ function App() {
             </div>
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
               {[
-                { l: "Total Kendaraan", v: kendF.length, c: "text-primary" },
-                { l: "Sedang Digunakan", v: kendF.filter((k) => k.status === "Digunakan").length, c: "text-warning" },
-                { l: "Tersedia", v: kendF.filter((k) => k.status === "Tersedia").length, c: "text-success" },
-                { l: "Perjalanan Selesai", v: selesaiF.length, c: "text-foreground" },
+                { l: "Total Kendaraan", v: kendF.length, c: "text-primary", Icon: Car },
+                { l: "Sedang Digunakan", v: kendF.filter((k) => k.status === "Digunakan").length, c: "text-warning", Icon: Navigation },
+                { l: "Tersedia", v: kendF.filter((k) => k.status === "Tersedia").length, c: "text-success", Icon: CheckCheck },
+                { l: "Perjalanan Selesai", v: selesaiF.length, c: "text-foreground", Icon: Flag },
               ].map((s) => (
-                <Card key={s.l}><p className="text-sm text-muted-foreground">{s.l}</p><p className={`mt-1 text-3xl font-extrabold ${s.c}`}>{s.v}</p></Card>
+                <Card key={s.l}><p className="flex items-center gap-1.5 text-sm text-muted-foreground"><s.Icon size={15} className="shrink-0 opacity-70" />{s.l}</p><p className={`mt-1 text-3xl font-extrabold ${s.c}`}>{s.v}</p></Card>
               ))}
             </div>
             <div>
               <h3 className="mb-3 text-sm font-bold uppercase tracking-widest text-muted-foreground">Rekap Perjalanan{areaFilter !== "Semua" && ` — ${areaFilter}`}</h3>
               <div className="grid gap-4 sm:grid-cols-3">
                 {[
-                  { l: "Total Trip (KM)", v: totalKm.toLocaleString("id-ID"), c: "text-primary" },
-                  { l: "Total Waktu Perjalanan", v: fmtDur(totalWaktu), c: "text-warning" },
-                  { l: "Total Estimasi BBM (Ltr)", v: bbmLengkap ? `${totalBbm.toFixed(1)} Ltr` : "Belum tersedia", c: "text-success" },
+                  { l: "Total Trip (KM)", v: totalKm.toLocaleString("id-ID"), c: "text-primary", Icon: Gauge },
+                  { l: "Total Waktu Perjalanan", v: fmtDur(totalWaktu), c: "text-warning", Icon: Clock },
+                  { l: "Total Estimasi BBM (Ltr)", v: bbmLengkap ? `${totalBbm.toFixed(1)} Ltr` : "Belum tersedia", c: "text-success", Icon: Fuel },
                 ].map((s) => (
-                  <Card key={s.l}><p className="text-sm text-muted-foreground">{s.l}</p><p className={`mt-1 text-2xl font-extrabold ${s.c}`}>{s.v}</p></Card>
+                  <Card key={s.l}><p className="flex items-center gap-1.5 text-sm text-muted-foreground"><s.Icon size={15} className="shrink-0 opacity-70" />{s.l}</p><p className={`mt-1 text-2xl font-extrabold ${s.c}`}>{s.v}</p></Card>
                 ))}
               </div>
             </div>
@@ -299,7 +310,7 @@ function App() {
                       </td>
                       <td className="py-3">
                         {trip.inAt === undefined
-                          ? <Button size="sm" onClick={() => { setTipe("dinas"); setCi({ ...ci, id: trip.id, user: trip.user ?? "", bidang: trip.bidang ?? "" }); setMenu("Check-In"); }}>Check-In</Button>
+                          ? <Button size="sm" onClick={() => { setTipe("dinas"); setCi({ ...ci, id: trip.id, user: trip.user ?? "", bidang: trip.bidang ?? "" }); setMenu("Check-In"); }}><LogIn size={14} />Check-In</Button>
                           : <Button size="sm" variant="outline" onClick={() => { setReportTab("dinas"); setMenu("Laporan"); }}>Lihat Laporan</Button>}
                       </td>
                     </tr>
@@ -348,7 +359,7 @@ function App() {
                             <td className="py-3 pr-4">{t.lokasi || "—"}</td>
                             <td className="py-3 pr-4">{fmtWaktu(t.outAt)}</td>
                             <td className="py-3 pr-4">{fmtDur(Date.now() - t.outAt)}</td>
-                            <td className="py-3"><Button size="sm" variant="outline" onClick={() => { setTipe("tamu"); setCi({ ...ci, id: t.id, user: t.user ?? "", bidang: t.bidang ?? "" }); setMenu("Check-Out"); }}>Check-Out</Button></td>
+                            <td className="py-3"><Button size="sm" variant="outline" onClick={() => { setTipe("tamu"); setCi({ ...ci, id: t.id, user: t.user ?? "", bidang: t.bidang ?? "" }); setMenu("Check-Out"); }}><LogOut size={14} />Check-Out</Button></td>
                           </tr>
                         ))}
                         {tamuAktif.length === 0 && <tr><td colSpan={7} className="py-8 text-center text-muted-foreground">Saat ini tidak ada tamu yang sedang berkunjung.</td></tr>}
@@ -473,7 +484,7 @@ function App() {
                 ))}
               </div>
             </div>
-            <Button disabled={!coValid} onClick={submitOut}>{tamu ? "Kirim Data Check-In Tamu" : "Kirim Data Check-Out"}</Button>
+            <Button disabled={!coValid} onClick={submitOut}>{tamu ? <><LogIn size={14} />Kirim Data Check-In Tamu</> : <><LogOut size={14} />Kirim Data Check-Out</>}</Button>
           </Card>
         )}
 
@@ -487,7 +498,7 @@ function App() {
                   <p className="text-sm">{t.tipe === "tamu" ? <>Kendaraan Tamu · Nama Tamu: {t.user || "—"} · Instansi: {t.bidang || "—"} · Lokasi: {t.lokasi || "—"}</> : <>User: {t.user || "—"} · Bidang: {t.bidang || "—"}</>}</p>
                   <p className="text-sm text-muted-foreground">{t.tujuan} — keluar {fmtWaktu(t.outAt)}{t.tipe !== "tamu" && <> · odometer {t.odoOut.toLocaleString("id-ID")} KM</>}</p>
                 </div>
-                <button className={btn} onClick={() => { setTipe(t.tipe === "tamu" ? "tamu" : "dinas"); setCi({ ...ci, id: t.id, user: t.user ?? "", bidang: t.bidang ?? "" }); setMenu(t.tipe === "tamu" ? "Check-Out" : "Check-In"); }}>{t.tipe === "tamu" ? "Check-Out" : "Check-In"}</button>
+                <button className={btn} onClick={() => { setTipe(t.tipe === "tamu" ? "tamu" : "dinas"); setCi({ ...ci, id: t.id, user: t.user ?? "", bidang: t.bidang ?? "" }); setMenu(t.tipe === "tamu" ? "Check-Out" : "Check-In"); }}>{t.tipe === "tamu" ? <><LogOut size={14} />Check-Out</> : <><LogIn size={14} />Check-In</>}</button>
               </Card>
             ))}
           </div>
@@ -528,7 +539,7 @@ function App() {
               </div>
             </div>
             <input className={inp} placeholder="Catatan kondisi" value={ci.kondisi} onChange={(e) => setCi({ ...ci, kondisi: e.target.value })} />
-            <button className={btn} disabled={!ciValid} onClick={submitIn}>{tamu ? "Kirim Data Check-Out Tamu" : "Kirim Data Check-In"}</button>
+            <button className={btn} disabled={!ciValid} onClick={submitIn}>{tamu ? <><LogOut size={14} />Kirim Data Check-Out Tamu</> : <><LogIn size={14} />Kirim Data Check-In</>}</button>
           </Card>
         )}
 
