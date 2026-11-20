@@ -6,6 +6,7 @@ import { Car, CheckCheck, Clock, Download, FileText, Flag, Fuel, Gauge, LayoutDa
 import { createGuestReportBlob, createReportBlob, deliverReport } from "@/lib/report-export";
 import { type Trip } from "@/lib/vehicle-data";
 import { useFleet } from "@/components/fleet-provider";
+import { allowedAreas } from "@/lib/access";
 import { UserBadge } from "@/components/auth-gate";
 import logo from "@/assets/gardu-bandung-logo.jpg.asset.json";
 import { MasterNav } from "@/components/master-nav";
@@ -78,7 +79,15 @@ function Steps({ items, active }: { items: string[]; active: number }) {
 
 function App() {
   const [menu, setMenu] = useState<Menu>("Dashboard");
-  const { kend, setKend, trips, setTrips, drivers, users, areas, currentUser } = useFleet();
+  const { kend: kendAll, setKend, trips: tripsAll, setTrips, drivers: driversAll, users, areas: areasAll, currentUser } = useFleet();
+  // Batasi data sesuai wilayah tugas akun yang login (kosong = semua wilayah).
+  const scope = allowedAreas(currentUser);
+  const inScope = (a?: string) => !scope || (!!a && scope.includes(a.toUpperCase()));
+  const kend = scope ? kendAll.filter((k) => inScope(k.area)) : kendAll;
+  const areas = scope ? areasAll.filter((a) => inScope(a)) : areasAll;
+  const drivers = scope ? driversAll.filter((d) => !d.wilayah || inScope(d.wilayah)) : driversAll;
+  const trips = scope ? tripsAll.filter((t) => (t.tipe === "tamu" ? inScope(t.lokasi) : inScope(kendAll.find((k) => k.nopol === t.nopol)?.area))) : tripsAll;
+  const petugas = currentUser?.nama ?? SATPAM0;
   const [msg, setMsg] = useState("");
   const [scan, setScan] = useState<{ which: "out" | "in"; state: "busy" | "ok" | "fail" } | null>(null);
   const [editOdoIn, setEditOdoIn] = useState(false);
@@ -125,43 +134,43 @@ function App() {
   // Check-out form
   const [tipe, setTipe] = useState<TipeKendaraan>("dinas");
   const tamu = tipe === "tamu";
-  const [co, setCo] = useState({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", lokasi: "", satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""] });
+  const [co, setCo] = useState({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", lokasi: "", satpam: petugas, odo: "", fotoOdo: "", foto: ["", ""] });
   const kSel = kend.find((k) => k.nopol === co.nopol);
   const coValid = tamu ? isGuestCheckoutValid(co) : isCheckoutValid(co, kSel);
   const submitOut = () => {
     if (!coValid) return;
     if (tamu) {
-      setTrips((t) => [{ id: Date.now(), tipe: "tamu", nopol: co.nopol.trim(), driver: co.user.trim(), tujuan: co.tujuan, user: co.user.trim(), bidang: co.bidang.trim(), lokasi: co.lokasi, satpamOut: co.satpam, outAt: Date.now(), odoOut: 0, fotoOut: co.foto }, ...t]);
-      setCo({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", lokasi: "", satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""] });
+      setTrips((t) => [{ id: Date.now(), tipe: "tamu", nopol: co.nopol.trim(), driver: co.user.trim(), tujuan: co.tujuan, user: co.user.trim(), bidang: co.bidang.trim(), lokasi: co.lokasi, satpamOut: petugas, outAt: Date.now(), odoOut: 0, fotoOut: co.foto }, ...t]);
+      setCo({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", lokasi: "", satpam: petugas, odo: "", fotoOdo: "", foto: ["", ""] });
       flash("Kedatangan tamu tercatat (Check-In). Proses Check-Out saat tamu keluar.");
       setMenu("Dalam Perjalanan");
       return;
     }
-    setTrips((t) => [{ id: Date.now(), tipe: "dinas", nopol: co.nopol, driver: co.driver, tujuan: co.tujuan, user: co.user.trim(), bidang: co.bidang.trim(), satpamOut: co.satpam, outAt: Date.now(), odoOut: Number(co.odo), fotoOdoOut: co.fotoOdo, fotoOut: co.foto }, ...t]);
+    setTrips((t) => [{ id: Date.now(), tipe: "dinas", nopol: co.nopol, driver: co.driver, tujuan: co.tujuan, user: co.user.trim(), bidang: co.bidang.trim(), satpamOut: petugas, outAt: Date.now(), odoOut: Number(co.odo), fotoOdoOut: co.fotoOdo, fotoOut: co.foto }, ...t]);
     setKend((ks) => ks.map((k) => (k.nopol === co.nopol ? { ...k, status: "Digunakan" } : k)));
-    setCo({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", lokasi: "", satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""] });
+    setCo({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", lokasi: "", satpam: petugas, odo: "", fotoOdo: "", foto: ["", ""] });
     flash("Check-out tercatat. Kendaraan kini berstatus Digunakan.");
     setMenu("Dalam Perjalanan");
   };
 
   // Check-in form
-  const [ci, setCi] = useState({ id: 0, satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan", user: "", bidang: "" });
+  const [ci, setCi] = useState({ id: 0, satpam: petugas, odo: "", fotoOdo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan", user: "", bidang: "" });
   const tSel = trips.find((t) => t.id === ci.id);
   const [editOdo, setEditOdo] = useState<string | null>(null);
   const ciValid = tSel?.tipe === "tamu" ? isGuestCheckinValid(ci, tSel) : isCheckinValid(ci, tSel);
   const submitIn = () => {
     if (!ciValid || !tSel) return;
     if (tSel.tipe === "tamu") {
-      setTrips((t) => t.map((x) => (x.id === ci.id ? { ...x, satpamIn: ci.satpam, inAt: Date.now(), odoIn: 0, fotoIn: ci.foto, kondisi: ci.kondisi, user: ci.user.trim(), bidang: ci.bidang.trim() } : x)));
-      setCi({ id: 0, satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan", user: "", bidang: "" });
+      setTrips((t) => t.map((x) => (x.id === ci.id ? { ...x, satpamIn: petugas, inAt: Date.now(), odoIn: 0, fotoIn: ci.foto, kondisi: ci.kondisi, user: ci.user.trim(), bidang: ci.bidang.trim() } : x)));
+      setCi({ id: 0, satpam: petugas, odo: "", fotoOdo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan", user: "", bidang: "" });
       flash("Tamu sudah keluar (Check-Out) dan tercatat di laporan.");
       setReportTab("tamu");
       setMenu("Laporan");
       return;
     }
-    setTrips((t) => t.map((x) => (x.id === ci.id ? { ...x, satpamIn: ci.satpam, inAt: Date.now(), odoIn: Number(ci.odo), fotoOdoIn: ci.fotoOdo, fotoIn: ci.foto, kondisi: ci.kondisi, user: ci.user.trim(), bidang: ci.bidang.trim() } : x)));
+    setTrips((t) => t.map((x) => (x.id === ci.id ? { ...x, satpamIn: petugas, inAt: Date.now(), odoIn: Number(ci.odo), fotoOdoIn: ci.fotoOdo, fotoIn: ci.foto, kondisi: ci.kondisi, user: ci.user.trim(), bidang: ci.bidang.trim() } : x)));
     setKend((ks) => ks.map((k) => (k.nopol === tSel.nopol ? { ...k, status: "Tersedia", odo: Number(ci.odo) } : k)));
-    setCi({ id: 0, satpam: SATPAM0, odo: "", fotoOdo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan", user: "", bidang: "" });
+    setCi({ id: 0, satpam: petugas, odo: "", fotoOdo: "", foto: ["", ""], kondisi: "Baik, tidak ada kerusakan", user: "", bidang: "" });
     flash("Check-in tercatat. Jarak & BBM dihitung otomatis, kendaraan kembali Tersedia.");
     setReportTab("dinas");
     setMenu("Laporan");
@@ -231,7 +240,7 @@ function App() {
               <div className="space-y-2">
               <label className="text-sm font-semibold text-muted-foreground" htmlFor="filter-area">Wilayah Kerja</label>
               <select id="filter-area" aria-label="Wilayah Kerja" className={inp} value={areaFilter} onChange={(e) => setAreaFilter(e.target.value)}>
-                <option value="Semua">Semua Wilayah Kerja</option>
+                <option value="Semua">{scope ? "Semua Wilayah Tugas" : "Semua Wilayah Kerja"}</option>
                 {areas.map((a) => <option key={a} value={a}>{a}</option>)}
               </select>
               </div>
@@ -463,7 +472,7 @@ function App() {
               <label className="space-y-1 text-sm font-semibold"><span>Bidang</span><input className={inp} placeholder="Bidang pegawai" value={co.bidang} onChange={e => setCo({ ...co, bidang: e.target.value })} /></label>
               </>}
               <label className="space-y-1 text-sm font-semibold"><span>{tamu ? "Keperluan" : "Tujuan"}</span><input className={inp} placeholder={tamu ? "Keperluan bertamu" : "Tujuan / keperluan"} value={co.tujuan} onChange={(e) => setCo({ ...co, tujuan: e.target.value })} /></label>
-              <label className="space-y-1 text-sm font-semibold"><span>Petugas Satpam</span><select className={inp} value={co.satpam} onChange={(e) => setCo({ ...co, satpam: e.target.value })}>{satpams.map((s) => <option key={s}>{s}</option>)}</select></label>
+              <label className="space-y-1 text-sm font-semibold"><span>Petugas Satpam</span><input aria-label="Petugas Satpam" className={inp} value={petugas} readOnly /></label>
             </div>
             {!tamu && <>
             <div>
@@ -513,7 +522,7 @@ function App() {
                 <option value={0}>{tamu ? "Pilih kendaraan tamu yang keluar…" : "Pilih kendaraan yang kembali…"}</option>
                 {aktif.filter((t) => (t.tipe === "tamu") === tamu).map((t) => <option key={t.id} value={t.id}>{t.nopol} — {t.tipe === "tamu" ? `${t.user} (${t.bidang})` : t.driver}</option>)}
               </select></label>
-              <label className="space-y-1 text-sm font-semibold"><span>Petugas Satpam</span><select className={inp} value={ci.satpam} onChange={(e) => setCi({ ...ci, satpam: e.target.value })}>{satpams.map((s) => <option key={s}>{s}</option>)}</select></label>
+              <label className="space-y-1 text-sm font-semibold"><span>Petugas Satpam</span><input aria-label="Petugas Satpam" className={inp} value={petugas} readOnly /></label>
               <label className="space-y-1 text-sm font-semibold"><span>{tamu ? "Nama Tamu" : "User"}</span><input className={inp} aria-label={tamu ? "Nama Tamu" : "User"} placeholder={tamu ? "Nama tamu" : "Nama pegawai yang membawa kendaraan"} value={ci.user} onChange={(e) => setCi({ ...ci, user: e.target.value })} /></label>
               <label className="space-y-1 text-sm font-semibold"><span>{tamu ? "Instansi" : "Bidang"}</span><input className={inp} aria-label={tamu ? "Instansi" : "Bidang"} placeholder={tamu ? "Instansi" : "Contoh: Bidang Umum"} value={ci.bidang} onChange={(e) => setCi({ ...ci, bidang: e.target.value })} /></label>
             </div>

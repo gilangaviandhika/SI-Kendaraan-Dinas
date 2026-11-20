@@ -15,6 +15,13 @@
       "when": 1795142920234,
       "tag": "0001_add_user_account_status",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795143720094,
+      "tag": "0002_app_users_wilayah",
+      "breakpoints": true
     }
   ]
 }

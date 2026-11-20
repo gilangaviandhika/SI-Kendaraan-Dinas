@@ -1,6 +1,14 @@
 export type Role = "Admin" | "Security";
 export type UserStatus = "Aktif" | "Menunggu";
-export type AppUser = { nama: string; bidang: string; username: string; password: string; role: Role; status: UserStatus };
+export type AppUser = { nama: string; bidang: string; username: string; password: string; role: Role; status: UserStatus; wilayah?: string };
+
+/** Wilayah yang boleh dilihat akun; null = semua wilayah (Superadmin). Satpam UPT Bandung juga menjaga ULTG Bandung Barat (satu gerbang), datanya tetap terpisah per wilayah. */
+export function allowedAreas(user: Pick<AppUser, "wilayah"> | null | undefined): string[] | null {
+  const w = user?.wilayah?.trim();
+  if (!w) return null;
+  if (w.toUpperCase() === "UPT BANDUNG") return ["UPT BANDUNG", "ULTG BANDUNG BARAT"];
+  return [w.toUpperCase()];
+}
 
 /** Security hanya boleh membuka Dashboard (beserta Check-Out, Dalam Perjalanan, Check-In, Laporan). */
 export function canAccessPath(role: Role, path: string): boolean {

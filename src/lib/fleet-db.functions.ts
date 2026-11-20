@@ -63,7 +63,7 @@ const rowToTrip = (r: Omit<TripRow, "updated_at"> & { updated_at?: string }): Tr
   fotoOdoOut: r.foto_odo_out ?? undefined, fotoOut: r.foto_out ?? [], satpamIn: r.satpam_in ?? undefined, inAt: r.in_at == null ? undefined : Number(r.in_at),
   odoIn: r.odo_in == null ? undefined : Number(r.odo_in), fotoOdoIn: r.foto_odo_in ?? undefined, fotoIn: r.foto_in ?? undefined, kondisi: r.kondisi ?? undefined,
 });
-const toAppUser = (u: UserRow, withPassword: boolean): AppUser => ({ nama: u.nama, bidang: u.bidang, username: u.username, password: withPassword ? u.password : "", role: u.role === "Admin" ? "Admin" : "Security", status: u.status === "Menunggu" ? "Menunggu" : "Aktif" });
+const toAppUser = (u: UserRow, withPassword: boolean): AppUser => ({ nama: u.nama, bidang: u.bidang, username: u.username, password: withPassword ? u.password : "", role: u.role === "Admin" ? "Admin" : "Security", status: u.status === "Menunggu" ? "Menunggu" : "Aktif", wilayah: u.wilayah ?? "" });
 
 export const dbLogin = createServerFn({ method: "POST" })
   .inputValidator((d: { username: string; password: string }) => ({ username: str(d?.username, 100).trim().toLowerCase(), password: str(d?.password, 200) }))
@@ -146,7 +146,7 @@ export const dbSync = createServerFn({ method: "POST" })
       if (remove.length) { fail((await db.from("app_users").delete().in("username", remove)).error); await db.from("app_sessions").delete().in("username", remove); }
       for (const u of c.users.upsert) {
         const username = str(u.username, 100);
-        const base = { nama: str(u.nama), bidang: str(u.bidang), role: u.role === "Admin" ? "Admin" : "Security", status: u.status === "Menunggu" ? "Menunggu" : "Aktif", urutan: ord(c.order?.users, u.username) };
+        const base = { nama: str(u.nama), bidang: str(u.bidang), role: u.role === "Admin" ? "Admin" : "Security", status: u.status === "Menunggu" ? "Menunggu" : "Aktif", wilayah: str(u.wilayah ?? ""), urutan: ord(c.order?.users, u.username) };
         const password = u.password ? str(u.password, 200) : "";
         const exists = (await db.from("app_users").select("username").eq("username", username).maybeSingle()).data;
         if (exists) fail((await db.from("app_users").update(password ? { ...base, password } : base).eq("username", username)).error);

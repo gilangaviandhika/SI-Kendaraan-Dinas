@@ -14,3 +14,10 @@ describe("validasi pendaftaran akun", () => {
   it("password kurang dari 6 karakter ditolak", () => { expect(validateRegistration({ nama: "Budi", username: "budi", password: "12345" }, taken)).toMatch(/Password/); });
   it("username yang sudah dipakai ditolak walau beda huruf besar", () => { expect(validateRegistration({ nama: "Budi", username: "ADMIN", password: "rahasia1" }, taken)).toMatch(/sudah dipakai/); });
 });
+
+import { allowedAreas as aa } from "@/lib/access";
+describe("wilayah tugas", () => {
+  it("Superadmin tanpa wilayah melihat semua", () => expect(aa({ wilayah: "" })).toBeNull());
+  it("Satpam UPT Bandung menjaga UPT Bandung dan ULTG Bandung Barat", () => expect(aa({ wilayah: "UPT Bandung" })).toEqual(["UPT BANDUNG", "ULTG BANDUNG BARAT"]));
+  it("Satpam Selatan hanya Selatan", () => expect(aa({ wilayah: "ULTG BANDUNG SELATAN" })).toEqual(["ULTG BANDUNG SELATAN"]));
+});

@@ -42,6 +42,7 @@ export type Database = {
           status: string
           urutan: number
           username: string
+          wilayah: string
         }
         Insert: {
           bidang?: string
@@ -52,6 +53,7 @@ export type Database = {
           status?: string
           urutan?: number
           username: string
+          wilayah?: string
         }
         Update: {
           bidang?: string
@@ -62,6 +64,7 @@ export type Database = {
           status?: string
           urutan?: number
           username?: string
+          wilayah?: string
         }
         Relationships: []
       }
