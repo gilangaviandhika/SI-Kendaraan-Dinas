@@ -11,7 +11,7 @@ vi.mock("@/lib/fleet-db.functions", () => ({
   },
   dbLoad: async ({ data }: { data: { token: string } }) => {
     const u = sessions.get(data.token); if (!u) return null;
-    return { username: u, kend: [], drivers: [], areas: [], trips: [], users: Object.entries(accounts).map(([username, a]) => ({ nama: username, bidang: "", username, password: "", role: a.role })) };
+    return { username: u, kend: [], drivers: [], areas: [], trips: [], users: Object.entries(accounts).map(([username, a]) => ({ nama: username, bidang: "", username, password: "", role: a.role, status: "Aktif" as const })) };
   },
   dbLogout: async ({ data }: { data: { token: string } }) => { sessions.delete(data.token); return { ok: true }; },
   dbSync: async () => ({ trips: [] }),

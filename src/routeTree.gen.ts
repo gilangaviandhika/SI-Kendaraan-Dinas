@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DaftarRouteImport } from './routes/daftar'
 import { Route as EOvertimeRouteImport } from './routes/e-overtime'
 import { Route as ESppdRouteImport } from './routes/e-sppd'
 import { Route as MasterRouteImport } from './routes/master'
@@ -22,6 +23,11 @@ import { Route as MasterUserRouteImport } from './routes/master.user'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DaftarRoute = DaftarRouteImport.update({
+  id: '/daftar',
+  path: '/daftar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EOvertimeRoute = EOvertimeRouteImport.update({
@@ -67,6 +73,7 @@ const MasterUserRoute = MasterUserRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/daftar': typeof DaftarRoute
   '/e-overtime': typeof EOvertimeRoute
   '/e-sppd': typeof ESppdRoute
   '/master': typeof MasterRouteWithChildren
@@ -78,6 +85,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/daftar': typeof DaftarRoute
   '/e-overtime': typeof EOvertimeRoute
   '/e-sppd': typeof ESppdRoute
   '/master': typeof MasterRouteWithChildren
@@ -90,6 +98,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/daftar': typeof DaftarRoute
   '/e-overtime': typeof EOvertimeRoute
   '/e-sppd': typeof ESppdRoute
   '/master': typeof MasterRouteWithChildren
@@ -103,6 +112,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/daftar'
     | '/e-overtime'
     | '/e-sppd'
     | '/master'
@@ -114,6 +124,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/daftar'
     | '/e-overtime'
     | '/e-sppd'
     | '/master'
@@ -125,6 +136,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/daftar'
     | '/e-overtime'
     | '/e-sppd'
     | '/master'
@@ -137,6 +149,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DaftarRoute: typeof DaftarRoute
   EOvertimeRoute: typeof EOvertimeRoute
   ESppdRoute: typeof ESppdRoute
   MasterRoute: typeof MasterRouteWithChildren
@@ -150,6 +163,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/daftar': {
+      id: '/daftar'
+      path: '/daftar'
+      fullPath: '/daftar'
+      preLoaderRoute: typeof DaftarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/e-overtime': {
@@ -230,6 +250,7 @@ const MasterRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DaftarRoute: DaftarRoute,
   EOvertimeRoute: EOvertimeRoute,
   ESppdRoute: ESppdRoute,
   MasterRoute: MasterRouteWithChildren,
