@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import type { AppUser } from "@/lib/access";
+import { validateRegistration, type AppUser } from "@/lib/access";
 import type { Database } from "@/integrations/supabase/types";
 type TripRow = Database["public"]["Tables"]["trips"]["Row"];
 type UserRow = Database["public"]["Tables"]["app_users"]["Row"];
@@ -63,17 +63,32 @@ const rowToTrip = (r: Omit<TripRow, "updated_at"> & { updated_at?: string }): Tr
   fotoOdoOut: r.foto_odo_out ?? undefined, fotoOut: r.foto_out ?? [], satpamIn: r.satpam_in ?? undefined, inAt: r.in_at == null ? undefined : Number(r.in_at),
   odoIn: r.odo_in == null ? undefined : Number(r.odo_in), fotoOdoIn: r.foto_odo_in ?? undefined, fotoIn: r.foto_in ?? undefined, kondisi: r.kondisi ?? undefined,
 });
-const toAppUser = (u: UserRow, withPassword: boolean): AppUser => ({ nama: u.nama, bidang: u.bidang, username: u.username, password: withPassword ? u.password : "", role: u.role === "Admin" ? "Admin" : "Security" });
+const toAppUser = (u: UserRow, withPassword: boolean): AppUser => ({ nama: u.nama, bidang: u.bidang, username: u.username, password: withPassword ? u.password : "", role: u.role === "Admin" ? "Admin" : "Security", status: u.status === "Menunggu" ? "Menunggu" : "Aktif" });
 
 export const dbLogin = createServerFn({ method: "POST" })
   .inputValidator((d: { username: string; password: string }) => ({ username: str(d?.username, 100).trim().toLowerCase(), password: str(d?.password, 200) }))
   .handler(async ({ data }) => {
     const db = await admin();
-    const { data: u } = await db.from("app_users").select("username,password").ilike("username", data.username.replace(/[%_\\]/g, "\\$&")).maybeSingle();
-    if (!u || u.password !== data.password) return { token: null as string | null };
+    const { data: u } = await db.from("app_users").select("username,password,status").ilike("username", data.username.replace(/[%_\\]/g, "\\$&")).maybeSingle();
+    if (!u || u.password !== data.password) return { token: null as string | null, pesan: null as string | null };
+    if (u.status !== "Aktif") return { token: null as string | null, pesan: "Akun Anda masih menunggu persetujuan Admin." as string | null };
     const token = crypto.randomUUID() + crypto.randomUUID();
     await db.from("app_sessions").insert({ token, username: u.username });
-    return { token };
+    return { token, pesan: null as string | null };
+  });
+
+/** Pendaftaran akun mandiri dari halaman login; akun baru berstatus Menunggu hingga disetujui Admin. */
+export const dbRegister = createServerFn({ method: "POST" })
+  .inputValidator((d: { nama: string; username: string; password: string; bidang?: string }) => ({ nama: str(d?.nama, 100), username: str(d?.username, 100), password: str(d?.password, 200), bidang: str(d?.bidang, 100) }))
+  .handler(async ({ data }) => {
+    const db = await admin();
+    const username = data.username.trim().toLowerCase();
+    const { data: existing } = await db.from("app_users").select("username");
+    const err = validateRegistration(data, (existing ?? []).map((x) => x.username));
+    if (err) return { ok: false as const, pesan: err as string | null };
+    const { error } = await db.from("app_users").insert({ nama: data.nama.trim(), bidang: data.bidang.trim(), username, password: data.password, role: "Security", status: "Menunggu", urutan: (existing?.length ?? 0) + 1 });
+    if (error) return { ok: false as const, pesan: "Pendaftaran gagal, coba lagi." as string | null };
+    return { ok: true as const, pesan: null as string | null };
   });
 
 export const dbLogout = createServerFn({ method: "POST" })
@@ -131,7 +146,7 @@ export const dbSync = createServerFn({ method: "POST" })
       if (remove.length) { fail((await db.from("app_users").delete().in("username", remove)).error); await db.from("app_sessions").delete().in("username", remove); }
       for (const u of c.users.upsert) {
         const username = str(u.username, 100);
-        const base = { nama: str(u.nama), bidang: str(u.bidang), role: u.role === "Admin" ? "Admin" : "Security", urutan: ord(c.order?.users, u.username) };
+        const base = { nama: str(u.nama), bidang: str(u.bidang), role: u.role === "Admin" ? "Admin" : "Security", status: u.status === "Menunggu" ? "Menunggu" : "Aktif", urutan: ord(c.order?.users, u.username) };
         const password = u.password ? str(u.password, 200) : "";
         const exists = (await db.from("app_users").select("username").eq("username", username).maybeSingle()).data;
         if (exists) fail((await db.from("app_users").update(password ? { ...base, password } : base).eq("username", username)).error);

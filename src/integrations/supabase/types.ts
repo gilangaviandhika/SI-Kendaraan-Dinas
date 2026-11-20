@@ -39,6 +39,7 @@ export type Database = {
           nama: string
           password: string
           role: string
+          status: string
           urutan: number
           username: string
         }
@@ -48,6 +49,7 @@ export type Database = {
           nama: string
           password: string
           role?: string
+          status?: string
           urutan?: number
           username: string
         }
@@ -57,6 +59,7 @@ export type Database = {
           nama?: string
           password?: string
           role?: string
+          status?: string
           urutan?: number
           username?: string
         }

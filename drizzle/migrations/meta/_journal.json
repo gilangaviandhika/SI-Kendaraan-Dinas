@@ -8,6 +8,13 @@
       "when": 1794803619938,
       "tag": "0000_create_gardu_bandung",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795142920234,
+      "tag": "0001_add_user_account_status",
+      "breakpoints": true
     }
   ]
 }

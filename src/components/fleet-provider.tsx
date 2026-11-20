@@ -87,11 +87,12 @@ function useFleetState() {
   }, [currentName, hydrate, reset]);
 
   const currentUser = users.find((u) => u.username === currentName) ?? null;
-  const login = async (username: string, password: string) => {
-    const { token: t } = await dbLogin({ data: { username, password } });
-    if (!t) return false;
+  /** true bila berhasil masuk; selain itu pesan kesalahan untuk ditampilkan di formulir. */
+  const login = async (username: string, password: string): Promise<true | string> => {
+    const { token: t, pesan } = await dbLogin({ data: { username, password } });
+    if (!t) return pesan ?? "Username atau password salah.";
     const d = await dbLoad({ data: { token: t } });
-    if (!d) return false;
+    if (!d) return "Gagal memuat data, coba lagi.";
     token.current = t; saveLoginSession(t); hydrate(d); setSyncError(null);
     return true;
   };
