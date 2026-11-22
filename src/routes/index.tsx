@@ -1,3 +1,4 @@
+import { SearchCombo } from "@/components/search-combo";
 import { prepareOdometerImage } from "@/lib/odometer-ocr";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -136,8 +137,6 @@ function App() {
   const tamu = tipe === "tamu";
   const [co, setCo] = useState({ nopol: "", driver: "", tujuan: "", user: "", bidang: "", lokasi: "", satpam: petugas, odo: "", fotoOdo: "", foto: ["", ""] });
   const kSel = kend.find((k) => k.nopol === co.nopol);
-  const [qKend, setQKend] = useState("");
-  const [qDrv, setQDrv] = useState("");
   const coValid = tamu ? isGuestCheckoutValid(co) : isCheckoutValid(co, kSel);
   const submitOut = () => {
     if (!coValid) return;
@@ -461,14 +460,8 @@ function App() {
                 {areas.map((a) => <option key={a} value={a}>{a}</option>)}
               </select></label>
               </> : <>
-              <label className="space-y-1 text-sm font-semibold"><span>Kendaraan</span><input aria-label="Cari kendaraan" className={inp} placeholder="🔍 Cari nopol / merk…" value={qKend} onChange={(e) => setQKend(e.target.value)} /><select aria-label="Kendaraan tersedia" className={inp} value={co.nopol} onChange={(e) => setCo({ ...co, nopol: e.target.value, odo: String(kend.find((k) => k.nopol === e.target.value)?.odo ?? "") })}>
-                <option value="">Pilih kendaraan tersedia…</option>
-                {kend.filter((k) => k.status === "Tersedia" && (!qKend.trim() || `${k.nopol} ${k.merk}`.toLowerCase().includes(qKend.trim().toLowerCase()))).map((k) => <option key={k.nopol} value={k.nopol}>{k.nopol} — {k.merk}</option>)}
-              </select></label>
-              <label className="space-y-1 text-sm font-semibold"><span>Driver</span><input aria-label="Cari driver" className={inp} placeholder="🔍 Cari nama driver…" value={qDrv} onChange={(e) => setQDrv(e.target.value)} /><select aria-label="Driver" className={inp} value={co.driver} onChange={(e) => setCo({ ...co, driver: e.target.value })}>
-                <option value="">Pilih driver…</option>
-                {drivers.filter((d) => !aktif.some((t) => t.driver === d.nama) && (!qDrv.trim() || d.nama.toLowerCase().includes(qDrv.trim().toLowerCase()))).sort((a, b) => Number(!!kSel && b.wilayah === kSel.area) - Number(!!kSel && a.wilayah === kSel.area)).map((d) => <option key={d.nama} value={d.nama}>{d.nama}{d.wilayah ? ` — ${d.wilayah}` : ""}</option>)}
-              </select></label>
+              <div className="space-y-1 text-sm font-semibold"><span>Kendaraan</span><SearchCombo ariaLabel="Kendaraan tersedia" className={inp} placeholder="🔍 Ketik nopol / merk…" value={co.nopol} options={kend.filter((k) => k.status === "Tersedia").map((k) => ({ value: k.nopol, label: `${k.nopol} — ${k.merk}` }))} onChange={(v) => setCo({ ...co, nopol: v, odo: String(kend.find((k) => k.nopol === v)?.odo ?? "") })} /></div>
+              <div className="space-y-1 text-sm font-semibold"><span>Driver</span><SearchCombo ariaLabel="Driver" className={inp} placeholder="🔍 Ketik nama driver…" value={co.driver} options={drivers.filter((d) => !aktif.some((t) => t.driver === d.nama)).sort((a, b) => Number(!!kSel && b.wilayah === kSel.area) - Number(!!kSel && a.wilayah === kSel.area)).map((d) => ({ value: d.nama, label: `${d.nama}${d.wilayah ? ` — ${d.wilayah}` : ""}` }))} onChange={(v) => setCo({ ...co, driver: v })} /></div>
               <label className="space-y-1 text-sm font-semibold"><span>User</span><input className={inp} list="checkout-users" placeholder="Nama pegawai" value={co.user} onChange={(e) => { const user = users.find(u => u.nama === e.target.value); setCo({ ...co, user: e.target.value, bidang: user?.bidang || co.bidang }); }} /></label>
               <datalist id="checkout-users">{users.map(u => <option key={u.nama} value={u.nama} />)}</datalist>
               <label className="space-y-1 text-sm font-semibold"><span>Bidang</span><input className={inp} placeholder="Bidang pegawai" value={co.bidang} onChange={e => setCo({ ...co, bidang: e.target.value })} /></label>
