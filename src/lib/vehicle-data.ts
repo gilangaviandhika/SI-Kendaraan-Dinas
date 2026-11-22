@@ -357,7 +357,7 @@ const defaultKmlByMerk: Record<string, number | null> = {
   "TRUCK CRANE": 3,
 };
 export const kendaraan0: Kendaraan[] = kendaraanRaw.map((k) => ({ ...k, kml: defaultKmlByMerk[k.merk] ?? null }));
-export type Driver = { nama: string; wilayah: string };
+export type Driver = { nama: string; wilayah: string; tipe?: "Reguler" | "Backup" };
 // Wilayah kerja driver diturunkan dari kendaraan yang ditugaskan kepadanya,
 // sehingga ikut terhubung dengan alur check-out/check-in.
 export const driverWilayah = (nama: string, kendaraan: Kendaraan[]): string | null => {

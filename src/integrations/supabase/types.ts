@@ -72,18 +72,21 @@ export type Database = {
         Row: {
           created_at: string
           nama: string
+          tipe: string
           urutan: number
           wilayah: string
         }
         Insert: {
           created_at?: string
           nama: string
+          tipe?: string
           urutan?: number
           wilayah?: string
         }
         Update: {
           created_at?: string
           nama?: string
+          tipe?: string
           urutan?: number
           wilayah?: string
         }

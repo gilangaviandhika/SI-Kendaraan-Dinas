@@ -112,7 +112,7 @@ export const dbLoad = createServerFn({ method: "POST" })
     return {
       username: me.username as string,
       kend: (k.data ?? []).map((r): Kendaraan => ({ nopol: r.nopol, merk: r.merk, driver: r.driver, area: r.area, admin: r.admin, odo: r.odo == null ? null : Number(r.odo), kml: r.kml == null ? null : Number(r.kml), status: r.status === "Digunakan" ? "Digunakan" : "Tersedia" })),
-      drivers: (d.data ?? []).map((r): Driver => ({ nama: r.nama, wilayah: r.wilayah })),
+      drivers: (d.data ?? []).map((r): Driver => ({ nama: r.nama, wilayah: r.wilayah, tipe: r.tipe === "Backup" ? "Backup" : "Reguler" })),
       areas: (a.data ?? []).map((r) => r.nama as string),
       users: (u.data ?? []).map((r) => toAppUser(r, isAdmin || r.username === me.username)),
       trips: await signPhotos(db, (t.data ?? []).map(rowToTrip)),
@@ -135,7 +135,11 @@ export const dbSync = createServerFn({ method: "POST" })
     }
     if (isAdmin && c.drivers) {
       if (c.drivers.remove.length) fail((await db.from("driver").delete().in("nama", c.drivers.remove)).error);
-      if (c.drivers.upsert.length) fail((await db.from("driver").upsert(c.drivers.upsert.map((x) => ({ nama: str(x.nama), wilayah: str(x.wilayah), urutan: ord(c.order?.drivers, x.nama) })))).error);
+      if (c.drivers.upsert.length) fail((await db.from("driver").upsert(c.drivers.upsert.map((x) => ({ nama: str(x.nama), wilayah: str(x.wilayah), tipe: x.tipe === "Backup" ? "Backup" : "Reguler", urutan: ord(c.order?.drivers, x.nama) })))).error);
+    } else if (c.drivers) {
+      // Security hanya boleh menambah driver backup baru; data yang sudah ada tidak diubah.
+      const baru = c.drivers.upsert.filter((x) => x.tipe === "Backup" && str(x.nama));
+      if (baru.length) fail((await db.from("driver").upsert(baru.map((x) => ({ nama: str(x.nama), wilayah: str(x.wilayah), tipe: "Backup", urutan: ord(c.order?.drivers, x.nama) })), { onConflict: "nama", ignoreDuplicates: true })).error);
     }
     if (isAdmin && c.areas) {
       if (c.areas.remove.length) fail((await db.from("wilayah_kerja").delete().in("nama", c.areas.remove)).error);

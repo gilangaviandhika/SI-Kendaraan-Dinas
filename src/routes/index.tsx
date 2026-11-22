@@ -80,7 +80,7 @@ function Steps({ items, active }: { items: string[]; active: number }) {
 
 function App() {
   const [menu, setMenu] = useState<Menu>("Dashboard");
-  const { kend: kendAll, setKend, trips: tripsAll, setTrips, drivers: driversAll, users, areas: areasAll, currentUser } = useFleet();
+  const { kend: kendAll, setKend, trips: tripsAll, setTrips, drivers: driversAll, setDrivers, users, areas: areasAll, currentUser } = useFleet();
   // Batasi data sesuai wilayah tugas akun yang login (kosong = semua wilayah).
   const scope = allowedAreas(currentUser);
   const inScope = (a?: string) => !scope || (!!a && scope.includes(a.toUpperCase()));
@@ -461,7 +461,9 @@ function App() {
               </select></label>
               </> : <>
               <div className="space-y-1 text-sm font-semibold"><span>Kendaraan</span><SearchCombo ariaLabel="Kendaraan tersedia" className={inp} placeholder="🔍 Ketik nopol / merk…" value={co.nopol} options={kend.filter((k) => k.status === "Tersedia").map((k) => ({ value: k.nopol, label: `${k.nopol} — ${k.merk}` }))} onChange={(v) => setCo({ ...co, nopol: v, odo: String(kend.find((k) => k.nopol === v)?.odo ?? "") })} /></div>
-              <div className="space-y-1 text-sm font-semibold"><span>Driver</span><SearchCombo ariaLabel="Driver" className={inp} placeholder="🔍 Ketik nama driver…" value={co.driver} options={drivers.filter((d) => !aktif.some((t) => t.driver === d.nama)).sort((a, b) => Number(!!kSel && b.wilayah === kSel.area) - Number(!!kSel && a.wilayah === kSel.area)).map((d) => ({ value: d.nama, label: `${d.nama}${d.wilayah ? ` — ${d.wilayah}` : ""}` }))} onChange={(v) => setCo({ ...co, driver: v })} /></div>
+              <div className="space-y-1 text-sm font-semibold"><span>Driver</span><SearchCombo ariaLabel="Driver" className={inp} placeholder="🔍 Ketik nama driver…" value={co.driver} options={drivers.filter((d) => !aktif.some((t) => t.driver === d.nama)).sort((a, b) => Number(!!kSel && b.wilayah === kSel.area) - Number(!!kSel && a.wilayah === kSel.area)).map((d) => ({ value: d.nama, label: `${d.nama}${d.wilayah ? ` — ${d.wilayah}` : ""}${d.tipe === "Backup" ? " [Backup]" : ""}` }))} onChange={(v) => setCo({ ...co, driver: v })}
+                createLabel={(t) => `+ Gunakan "${t.toUpperCase()}" sebagai Driver Backup`}
+                onCreate={(t) => { const nama = t.toUpperCase().replace(/\s+/g, " "); if (!driversAll.some((d) => d.nama.toUpperCase() === nama)) setDrivers((ds) => [...ds, { nama, wilayah: kSel?.area ?? scope?.[0] ?? "", tipe: "Backup" }]); setCo({ ...co, driver: nama }); }} /></div>
               <label className="space-y-1 text-sm font-semibold"><span>User</span><input className={inp} list="checkout-users" placeholder="Nama pegawai" value={co.user} onChange={(e) => { const user = users.find(u => u.nama === e.target.value); setCo({ ...co, user: e.target.value, bidang: user?.bidang || co.bidang }); }} /></label>
               <datalist id="checkout-users">{users.map(u => <option key={u.nama} value={u.nama} />)}</datalist>
               <label className="space-y-1 text-sm font-semibold"><span>Bidang</span><input className={inp} placeholder="Bidang pegawai" value={co.bidang} onChange={e => setCo({ ...co, bidang: e.target.value })} /></label>

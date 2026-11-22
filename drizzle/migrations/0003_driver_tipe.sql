@@ -1,0 +1,1 @@
+ALTER TABLE public.driver ADD COLUMN IF NOT EXISTS tipe text NOT NULL DEFAULT 'Reguler';
