@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 /** In-page rear camera viewfinder so phones never leave the browser for the native camera app. */
-export function LiveCamera({ onCapture, onClose, onUnavailable }: { onCapture: (dataUrl: string, file: File) => void; onClose: () => void; onUnavailable: () => void }) {
+export function LiveCamera({ onCapture, onClose, onUnavailable, stampName }: { stampName?: string;  onCapture: (dataUrl: string, file: File) => void; onClose: () => void; onUnavailable: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +30,7 @@ export function LiveCamera({ onCapture, onClose, onUnavailable }: { onCapture: (
     const ctx = c.getContext("2d");
     if (!ctx) return;
     ctx.drawImage(v, 0, 0, c.width, c.height);
+    drawStamp(ctx, c.width, c.height, stampName);
     const url = c.toDataURL("image/jpeg", 0.8);
     c.toBlob((b) => {
       streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -50,4 +51,18 @@ export function LiveCamera({ onCapture, onClose, onUnavailable }: { onCapture: (
       </div>
     </div>
   );
+}
+
+/** Burns capture time (WIB) and the logged-in officer's name into the bottom-left corner. */
+function drawStamp(ctx: CanvasRenderingContext2D, w: number, h: number, name?: string) {
+  const time = new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).format(new Date()) + " WIB";
+  const lines = [time, `Petugas: ${name || "-"}`];
+  const fs = Math.max(14, Math.round(w / 40)), pad = Math.round(fs / 2), lh = Math.round(fs * 1.3);
+  ctx.font = `bold ${fs}px sans-serif`;
+  const tw = Math.max(...lines.map((l) => ctx.measureText(l).width));
+  const bh = lh * lines.length + pad * 2;
+  ctx.fillStyle = "rgba(0,0,0,0.55)";
+  ctx.fillRect(pad, h - bh - pad, tw + pad * 2, bh);
+  ctx.fillStyle = "#fff"; ctx.textBaseline = "top";
+  lines.forEach((l, i) => ctx.fillText(l, pad * 2, h - bh - pad + pad + i * lh));
 }

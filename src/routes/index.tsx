@@ -56,6 +56,7 @@ function Foto({ label, value, onChange, onFile }: { label: string; value?: strin
   const [open, setOpen] = useState(false);
   const [fallback, setFallback] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const { currentUser } = useFleet();
   const onUnavailable = useCallback(() => { setOpen(false); setFallback(true); setTimeout(() => fileRef.current?.click(), 0); }, []);
   return (
     <>
@@ -64,7 +65,7 @@ function Foto({ label, value, onChange, onFile }: { label: string; value?: strin
       </button>
       <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" aria-label={label}
         onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) { onFile?.(f); void prepareOdometerImage(f).then(onChange).catch(() => onChange(URL.createObjectURL(f))); } }} />
-      {open && <LiveCamera onClose={() => setOpen(false)} onUnavailable={onUnavailable} onCapture={(url, f) => { setOpen(false); onChange(url); onFile?.(f); }} />}
+      {open && <LiveCamera stampName={currentUser?.nama ?? "-"} onClose={() => setOpen(false)} onUnavailable={onUnavailable} onCapture={(url, f) => { setOpen(false); onChange(url); onFile?.(f); }} />}
     </>
   );
 }
