@@ -130,7 +130,9 @@ function App() {
   const kendF = areaFilter === "Semua" ? kend : kend.filter((k) => k.area === areaFilter);
   const dalamRentang = (t: Trip) => inRange(t.outAt, waktuBounds);
   const selesaiF = (areaFilter === "Semua" ? selesaiDinas : selesaiDinas.filter((t) => areaOf(t.nopol) === areaFilter)).filter(dalamRentang);
-  const tripTerbaru = dashboardTripRows(trips.filter((trip) => trip.tipe !== "tamu"), areaOf, areaFilter, { start: new Date(new Date().setHours(0, 0, 0, 0)).getTime() - 2 * 86_400_000, end: Infinity }, Infinity);
+  // Trip Terbaru: yang sedang berjalan selalu di atas, lalu yang selesai; masing-masing diurutkan dari keberangkatan terbaru.
+  const tripTerbaru = dashboardTripRows(trips.filter((trip) => trip.tipe !== "tamu"), areaOf, areaFilter, { start: new Date(new Date().setHours(0, 0, 0, 0)).getTime() - 2 * 86_400_000, end: Infinity }, Infinity)
+    .sort((a, b) => Number(a.inAt !== undefined) - Number(b.inAt !== undefined) || b.outAt - a.outAt);
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(""), 3500); };
 
   // Check-out form
