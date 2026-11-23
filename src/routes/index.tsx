@@ -130,7 +130,7 @@ function App() {
   const kendF = areaFilter === "Semua" ? kend : kend.filter((k) => k.area === areaFilter);
   const dalamRentang = (t: Trip) => inRange(t.outAt, waktuBounds);
   const selesaiF = (areaFilter === "Semua" ? selesaiDinas : selesaiDinas.filter((t) => areaOf(t.nopol) === areaFilter)).filter(dalamRentang);
-  const tripTerbaru = dashboardTripRows(trips.filter((trip) => trip.tipe !== "tamu"), areaOf, areaFilter, waktuBounds);
+  const tripTerbaru = dashboardTripRows(trips.filter((trip) => trip.tipe !== "tamu"), areaOf, areaFilter, { start: new Date(new Date().setHours(0, 0, 0, 0)).getTime() - 2 * 86_400_000, end: Infinity }, Infinity);
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(""), 3500); };
 
   // Check-out form
@@ -287,11 +287,12 @@ function App() {
             </div>
             <Card className="overflow-x-auto">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <h3 className="flex items-center gap-2 font-bold"><RouteIcon size={18} className="text-primary" />Trip Terbaru</h3>
+                <h3 className="flex items-center gap-2 font-bold"><RouteIcon size={18} className="text-primary" />Trip Terbaru <span className="text-xs font-normal text-muted-foreground">(3 hari terakhir)</span></h3>
                 <span className="text-xs text-muted-foreground">{tripTerbaru.length} perjalanan</span>
               </div>
+              <div className="max-h-[27rem] overflow-y-auto">
               <table aria-label="Trip terbaru" className="w-full min-w-[52rem] text-sm">
-                <thead className="text-left text-muted-foreground">
+                <thead className="sticky top-0 z-10 bg-card text-left text-muted-foreground">
                   <tr>
                     <th className="py-2 pr-4">Kode Trip</th>
                     <th className="py-2 pr-4">Tujuan</th>
@@ -329,12 +330,13 @@ function App() {
                   {tripTerbaru.length === 0 && (
                     <tr>
                       <td colSpan={9} className="py-8 text-center text-muted-foreground">
-                        Belum ada perjalanan pada rentang waktu ini.
+                        Belum ada perjalanan dalam 3 hari terakhir.
                       </td>
                     </tr>
                   )}
                 </tbody>
               </table>
+              </div>
             </Card>
             {(() => {
               const tamuAll = trips.filter((t) => t.tipe === "tamu" && (areaFilter === "Semua" || t.lokasi === areaFilter));
