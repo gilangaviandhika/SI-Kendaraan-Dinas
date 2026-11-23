@@ -291,7 +291,7 @@ function App() {
                 <span className="text-xs text-muted-foreground">{tripTerbaru.length} perjalanan</span>
               </div>
               <div className="max-h-[27rem] overflow-y-auto">
-              <table aria-label="Trip terbaru" className="w-full min-w-[52rem] text-sm">
+              <table aria-label="Trip terbaru" className="w-full min-w-[52rem] text-xs">
                 <thead className="sticky top-0 z-10 bg-card text-left text-muted-foreground">
                   <tr>
                     <th className="py-2 pr-4">Kode Trip</th>
