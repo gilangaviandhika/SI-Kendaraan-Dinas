@@ -212,7 +212,7 @@ function App() {
 
   return (
     <div className="min-h-screen font-sans md:flex">
-      <aside className="bg-sidebar-bg text-primary-foreground md:min-h-screen md:w-64 md:shrink-0 p-5">
+      <aside className="bg-sidebar-bg text-primary-foreground md:sticky md:top-0 md:h-screen md:w-64 md:shrink-0 md:overflow-y-auto p-5">
         <div className="mb-6">
           <img src={logo.url} alt="Logo GARDU BANDUNG" width={56} height={56} className="mb-2 h-14 w-14 rounded-xl" />
           <p className="text-xs uppercase tracking-widest text-accent">UPT Bandung</p>

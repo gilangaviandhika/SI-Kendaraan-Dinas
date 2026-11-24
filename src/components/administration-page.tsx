@@ -7,7 +7,7 @@ export function AdministrationPage({ kind }: { kind: "overtime" | "sppd" }) {
   const title = isOvertime ? "e-Overtime" : "e-SPPD";
   return (
     <div className="min-h-screen font-sans md:flex">
-      <aside className="bg-sidebar-bg p-5 text-primary-foreground md:min-h-screen md:w-64 md:shrink-0">
+      <aside className="bg-sidebar-bg p-5 text-primary-foreground md:sticky md:top-0 md:h-screen md:w-64 md:shrink-0 md:overflow-y-auto">
         <p className="text-xs uppercase tracking-widest text-accent">UPT Bandung</p>
         <h1 className="text-xl font-extrabold">GARDU BANDUNG</h1>
         <Link to="/" className="mt-6 flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold hover:bg-primary-foreground/10"><ArrowLeft size={16} />Dashboard Kendaraan</Link>
